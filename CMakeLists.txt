@@ -4,9 +4,21 @@
 
 # Project Information
 cmake_minimum_required(VERSION 3.16.0 FATAL_ERROR)
-project(bridge VERSION 1.0.0)
-set(CMAKE_CXX_STANDARD 17)
+project(
+        bridge
+        VERSION 1.0.0
+)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++2a")
+
+message(STATUS "Is the C++ compiler loaded? ${CMAKE_CXX_COMPILER_LOADED}")
+if(CMAKE_CXX_COMPILER_LOADED)
+    message(STATUS "The C++ compiler ID is: ${CMAKE_CXX_COMPILER_ID}")
+    message(STATUS "Is the C++ from GNU? ${CMAKE_COMPILER_IS_GNUCXX}")
+    message(STATUS "The C++ compiler version is: ${CMAKE_CXX_COMPILER_VERSION}")
+endif()
 
 # CMake dependencies for installer
 include(CMakePackageConfigHelpers)

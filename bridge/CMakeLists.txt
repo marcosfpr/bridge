@@ -9,13 +9,6 @@ CPMFindPackage(
     FIND_PACKAGE_ARGUMENTS ""
 )
 
-CPMFindPackage(
-    NAME spdlog
-    GITHUB_REPOSITORY gabime/spdlog
-    VERSION 1.8.2
-    FIND_PACKAGE_ARGUMENTS ""
-)
-
 add_definitions(-DBOOST_ALL_DYN_LINK)
 
 find_package(Threads REQUIRED)
@@ -34,11 +27,11 @@ add_library(
 target_include_directories(
     bridge
     PUBLIC include
+    ${Boost_INCLUDE_DIRS}
 )
 
 # 
-target_link_libraries(bridge PRIVATE Boost::boost spdlog ${FILE_SYSTEM_LIB} Threads::Threads)
-
+target_link_libraries(bridge PRIVATE Boost::boost ${FILE_SYSTEM_LIB} Threads::Threads)
 target_compile_features(bridge PUBLIC cxx_std_20)
 
 include(CheckSymbolExists)
