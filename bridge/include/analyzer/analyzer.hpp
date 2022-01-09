@@ -17,14 +17,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
+// Defines a custom iterator over a vector of `field`s.
 
-#ifndef BRIDGE_HPP_
-#define BRIDGE_HPP_
+#ifndef ANALYZER_HPP_
+#define ANALYZER_HPP_
 
-#include "analyzer/analyzer.hpp"
-#include "directory.hpp"
-#include "global.hpp"
-#include "postings.hpp"
-#include "schema.hpp"
+#include "./regex_analyzer.hpp"
 
-#endif // BRIDGE_HPP_
+#endif
