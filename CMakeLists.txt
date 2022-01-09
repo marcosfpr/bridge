@@ -28,8 +28,6 @@ include(GNUInstallDirs)
 # Finding or downloading packages
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 message("CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
-option(CPM_USE_LOCAL_PACKAGES "Try `find_package` before downloading dependencies" ON)
-include(cmake/CPM.cmake)
 
 
 # check if this is a master project or a subdirectory of another project
@@ -60,6 +58,7 @@ option(BUILD_TESTS "Build tests" ${MASTER_PROJECT})
 option(BUILD_DOCS "Build documentation" ${MASTER_PROJECT})
 option(BUILD_INSTALLER "Build installer target" ${MASTER_PROJECT})
 option(BUILD_PACKAGE "Build package" ${MASTER_PROJECT})
+option(BUILD_CONAN "Build with conan" ${MASTER_PROJECT})
 
 # How to build
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
@@ -72,6 +71,18 @@ option(BUILD_WITH_UTF8 "Accept utf-8 in MSVC by default." ON)
 find_program(GCOV gcov)
 find_program(LCOV lcov)
 find_program(GENHTML genhtml)
+
+
+# Using CPM-CMake or conan
+if(BUILD_CONAN)
+        include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+        conan_basic_setup()
+else()
+        option(CPM_USE_LOCAL_PACKAGES "Try `find_package` before downloading dependencies" ON)
+        include(cmake/CPM.cmake)
+endif()
+
+
 
 if(GCOV AND LCOV AND GENHTML)
         set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage -O0")

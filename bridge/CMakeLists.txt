@@ -2,27 +2,35 @@
 ### Source                                          ###
 #######################################################
 
-CPMFindPackage(
-    NAME boost-cmake
-    GITHUB_REPOSITORY marcosfpr/boost-cmake
-    VERSION 1.71.0
-    FIND_PACKAGE_ARGUMENTS ""
-)
-
-add_definitions(-DBOOST_ALL_DYN_LINK)
-
-find_package(Threads REQUIRED)
 
 
 set(
     SOURCES
     src/main.cpp
-)
-
+    )
+    
 add_library(
     bridge 
     ${SOURCES}
 )
+
+# if not BUILD_CONAN
+if(NOT BUILD_CONAN)
+
+    CPMFindPackage(
+        NAME boost-cmake
+        GITHUB_REPOSITORY marcosfpr/boost-cmake
+        VERSION 1.71.0
+        FIND_PACKAGE_ARGUMENTS ""
+    )
+
+    
+endif()
+
+
+add_definitions(-DBOOST_ALL_DYN_LINK)
+    
+find_package(Threads REQUIRED)
 
 target_include_directories(
     bridge
@@ -30,8 +38,13 @@ target_include_directories(
     ${Boost_INCLUDE_DIRS}
 )
 
-# 
-target_link_libraries(bridge PRIVATE Boost::boost ${FILE_SYSTEM_LIB} Threads::Threads)
+
+if(BUILD_CONAN)
+    target_link_libraries(bridge PRIVATE ${CONAN_LIBS} ${FILE_SYSTEM_LIB} Threads::Threads)
+else()
+    target_link_libraries(bridge PRIVATE Boost::boost ${FILE_SYSTEM_LIB} Threads::Threads)
+endif()
+
 target_compile_features(bridge PUBLIC cxx_std_20)
 
 include(CheckSymbolExists)
