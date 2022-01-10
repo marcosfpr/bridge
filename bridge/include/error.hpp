@@ -18,11 +18,20 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
-//! \brief Defines a custom iterator over a  string.
+#ifndef BRIDGE_ERROR_HPP_
+#define BRIDGE_ERROR_HPP_
 
-#ifndef ANALYZER_HPP_
-#define ANALYZER_HPP_
+namespace bridge {
 
-#include "./regex_analyzer.hpp"
+    /**
+     * @brief Custom bridge runtime_error.
+     * 
+     */
+    class bridge_error : public std::runtime_error {
+    public:
+        explicit bridge_error(const std::string& what) : std::runtime_error(what) {}
+    };
+
+}; // namespace bridge
 
 #endif

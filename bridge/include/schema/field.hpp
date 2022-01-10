@@ -18,11 +18,35 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
-//! \brief Defines a custom iterator over a  string.
+#ifndef BRIDGE_FIELD_HPP_
+#define BRIDGE_FIELD_HPP_
 
-#ifndef ANALYZER_HPP_
-#define ANALYZER_HPP_
+#include <stdint.h>
 
-#include "./regex_analyzer.hpp"
+// todo: terminar campos.
+namespace bridge {
 
-#endif
+    namespace field {
+
+        // Fields are identified by an integer id.
+        struct field {
+            uint8_t field_id;
+        };
+
+        // TODO: field serialization
+
+        enum field_type {
+            String,
+            Int32,
+        };
+
+
+
+
+
+
+    }; // namespace field
+
+}; // namespace bridge
+
+#endif // BRIDGE_FIELD_HPP_

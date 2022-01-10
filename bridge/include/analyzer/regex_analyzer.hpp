@@ -17,7 +17,8 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
-// Defines a custom iterator over a vector of `field`s.
+
+//! \brief Defines a custom iterator over a string based on regular expressions.
 
 #ifndef REGEX_ANALYZER_HPP_
 #define REGEX_ANALYZER_HPP_
