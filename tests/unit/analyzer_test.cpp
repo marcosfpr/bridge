@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-TEST(test_analyzer, tokenize) {
+TEST(TestAnalyzer, Tokenize) {
   std::vector<std::string> tokens{"hello", "happy", "tax", "player"};
 
   auto tokenizer = bridge::analyzer::alphanumeric_tokenizer("hello happy tax player");

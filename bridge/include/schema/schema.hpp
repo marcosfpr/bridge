@@ -25,9 +25,12 @@
 #include <string>
 #include <vector>
 
+// #include "./field.hpp"
+#include "./options.hpp"
+
 namespace bridge {
 
-    struct field {
+    typedef struct field {
         std::string name;
 
         //! \brief Default constructor
@@ -56,17 +59,17 @@ namespace bridge {
 
         //! \brief Hashing trait
         size_t hash() const { return std::hash<std::string>()(name); }
-    };
+    } field_t;
 
     struct field_value {
-        field name;
+        field_t name;
         std::string value;
 
         //! \brief Default constructor
         field_value() = default;
 
         //! \brief Constructor
-        field_value(field name, std::string value)
+        field_value(field_t name, std::string value)
             : name(name), value(std::move(value)) {}
 
         //! \brief Copy constructor
@@ -101,7 +104,7 @@ namespace bridge {
 
     struct term {
         std::shared_ptr<std::string> text_ptr;
-        std::shared_ptr<field> field_ptr;
+        std::shared_ptr<field_t> field_ptr;
 
         //! \brief Copy constructor
         term(const term &other) = default;
@@ -155,7 +158,7 @@ namespace bridge {
          * @param f field name
          * @param text content of field
          */
-        void set(field f, std::string text) {
+        void set(field_t f, std::string text) {
             this->add(field_value(std::move(f), std::move(text)));
         }
 

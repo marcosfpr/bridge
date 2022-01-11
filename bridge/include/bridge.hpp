@@ -22,9 +22,9 @@
 #define BRIDGE_HPP_
 
 #include "analyzer/analyzer.hpp"
+#include "schema/schema.hpp"
 #include "directory.hpp"
 #include "global.hpp"
 #include "postings.hpp"
-#include "schema.hpp"
 
 #endif // BRIDGE_HPP_

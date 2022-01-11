@@ -7,6 +7,7 @@ add_executable(
   test_bridge
   main.cpp
   unit/analyzer_test.cpp
+  unit/schema_options_test.cpp
 )
 
 # add_executable(
