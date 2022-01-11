@@ -114,6 +114,8 @@ TEST(SchemaOptionsTest, MarshallTest) {
         total_bytes_write += marshall(out, stored_field).value();
     }
 
+    ASSERT_EQ(total_bytes_write, sizeof(string_field) + sizeof(text_field) + sizeof(stored_field));
+
     tmp_file.close();
     tmp_file.open(tmp_file_name, std::ios::in | std::ios::binary);
 
@@ -140,4 +142,58 @@ TEST(SchemaOptionsTest, MarshallTest) {
 
     // remove temporary file
     std::remove(tmp_file_name.c_str());
+}
+
+TEST(SchemaOptionsTest, NumericOptions) {
+    auto numeric_field = bridge::schema::FAST;
+
+    auto another_numeric_field = bridge::schema::numeric_option(false, true, false);
+
+    ASSERT_TRUE(numeric_field.is_fast());
+    ASSERT_FALSE(numeric_field.is_indexed());
+    ASSERT_FALSE(numeric_field.is_stored());
+
+    ASSERT_EQ(numeric_field, another_numeric_field);
+
+    numeric_field.set_fast(false);
+    ASSERT_FALSE(numeric_field.is_fast());
+
+    ASSERT_NE(numeric_field, another_numeric_field);
+
+}
+
+
+TEST(SchemaOptionsTest, NumericMarshall) {
+
+    auto numeric_field = bridge::schema::FAST;
+
+    // create temporary binary file
+    std::string tmp_file_name = "./tmp_file";
+    std::fstream tmp_file(tmp_file_name, std::ios::out | std::ios::binary);
+
+    // serialize to file
+    {
+        using namespace bridge::serialization;
+
+        output_archive out(tmp_file);
+        ASSERT_EQ(sizeof(numeric_field), marshall(out, numeric_field).value());
+    }
+
+    tmp_file.close();
+    tmp_file.open(tmp_file_name, std::ios::in | std::ios::binary);
+
+    // deserialize to object
+
+    {
+        using namespace bridge::serialization;
+
+        input_archive in(tmp_file);
+        auto deserialized_numeric_field = unmarshall<bridge::schema::numeric_option>(in).value();
+        ASSERT_EQ(numeric_field, deserialized_numeric_field);
+    }
+
+    tmp_file.close();
+    // remove file
+    std::remove(tmp_file_name.c_str());
+
 }

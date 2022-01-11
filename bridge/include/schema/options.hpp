@@ -113,40 +113,19 @@ namespace bridge::schema {
         bool operator!=(const text_indexing_option &other) const { return _index_options != other._index_options; }
 
         // Three-way comparison
-        auto operator<=>(const text_indexing_option &other) const { return _index_options <=> other._index_options; }
-
-//        //! \brief Safe serialize the text indexing option.
-//        [[maybe_unused]] std::optional<uint64_t> marshall(bridge::serialization::output_archive &out,
-//                                                          const unsigned int version = 0) {
-//            try {
-//                out << _index_options;
-//                // return the size of this.
-//                return sizeof(*this);
-//            } catch (bridge::serialization::invalid_archive & /*e*/) {
-//                return std::nullopt;
-//            }
-//        }
-//
-//        //! \brief Safe deserialize the text indexing option.
-//        [[maybe_unused]] static std::optional<text_indexing_option> unmarshall(bridge::serialization::input_archive &in,
-//                                                                               const unsigned int version = 0) {
-//            Value option;
-//            try {
-//                in >> option;
-//                // return the size of this.
-//                return text_indexing_option(option);
-//            } catch (bridge::serialization::invalid_archive & /*e*/) {
-//                return std::nullopt;
-//            }
-//        }
+        std::strong_ordering operator<=>(const text_indexing_option &other) const {
+            return _index_options <=> other._index_options;
+        }
 
         // Allow  Hashing
         friend std::hash<text_indexing_option>;
 
         friend class boost::serialization::access;
-        template <class Archive> [[maybe_unused]] void serialize(Archive &ar, const unsigned int version) {
+        template <class Archive>
+        [[maybe_unused]] void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
             ar &_index_options;
         }
+
       private:
         Value _index_options;
     };
@@ -199,7 +178,9 @@ namespace bridge::schema {
         bool operator!=(const text_option &other) const { return !(*this == other); }
 
         //! \brief Three  way comparison operator.
-        auto operator<=>(const text_option &other) const { return indexing_options <=> other.indexing_options; }
+        std::strong_ordering operator<=>(const text_option &other) const {
+            return indexing_options <=> other.indexing_options;
+        }
 
         //! \brief Get index options
         [[nodiscard]] text_indexing_option get_indexing_options() const { return indexing_options; }
@@ -208,47 +189,22 @@ namespace bridge::schema {
         [[nodiscard]] bool is_stored() const { return stored; }
 
         //! \brief Set index options
-        void set_indexing_options(text_indexing_option opt) { this->indexing_options = opt; }
+        [[maybe_unused]] void set_indexing_options(text_indexing_option opt) { this->indexing_options = opt; }
 
         //! \brief Set stored flag
-        void set_stored(bool is_stored) { this->stored = is_stored; }
+        [[maybe_unused]] void set_stored(bool is_stored) { this->stored = is_stored; }
 
         //! \brief Operator |
         text_option operator|(const text_option &other) const {
             return {indexing_options | other.indexing_options, stored || other.stored};
         }
 
-//        //! \brief Safe serialize the text indexing option.
-//        [[maybe_unused]] std::optional<uint64_t> marshall(bridge::serialization::output_archive &out,
-//                                                          const unsigned int version = 0) {
-//            try {
-//                out << indexing_options << stored;
-//                // return the size of this.
-//                return sizeof(*this);
-//            } catch (bridge::serialization::invalid_archive & /*e*/) {
-//                return std::nullopt;
-//            }
-//        }
-//
-//        //! \brief Safe deserialize the text indexing option.
-//        [[maybe_unused]] static std::optional<text_option> unmarshall(bridge::serialization::input_archive &in,
-//                                                                               const unsigned int version = 0) {
-//            text_indexing_option indexing_options;
-//            bool stored;
-//            try {
-//                in >> indexing_options >> stored;
-//                // return the size of this.
-//                return text_option(std::move(indexing_options), stored);
-//            } catch (bridge::serialization::invalid_archive & /*e*/) {
-//                return std::nullopt;
-//            }
-//        }
-
         friend class boost::serialization::access;
-        template <class Archive> void serialize(Archive &ar, const unsigned int version) { // NOLINT UnusedParameter
+        template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
             ar &indexing_options;
             ar &stored;
         }
+
       private:
         text_indexing_option indexing_options;
         bool stored;
@@ -302,13 +258,13 @@ namespace bridge::schema {
         //! \brief Set stored flag
         [[maybe_unused]] void set_stored(bool is_stored) { this->stored = is_stored; }
 
-
         friend class boost::serialization::access;
-        template <class Archive> void serialize(Archive &ar, const unsigned int version) {
+        template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
             ar &indexed;
             ar &fast;
             ar &stored;
         }
+
       private:
         bool indexed, fast, stored;
     };
