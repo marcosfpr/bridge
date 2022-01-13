@@ -190,7 +190,7 @@ namespace bridge::schema {
         [[nodiscard]] text_indexing_option get_indexing_options() const { return indexing_options; }
 
         //! \brief Get stored flag
-        [[nodiscard]] bool is_stored() const { return stored; }
+        [[nodiscard]]  constexpr bool is_stored() const { return stored; }
 
         //! \brief Set index options
         [[maybe_unused]] void set_indexing_options(text_indexing_option opt) { this->indexing_options = opt; }
@@ -245,13 +245,13 @@ namespace bridge::schema {
         bool operator!=(const numeric_field &other) const { return !(*this == other); }
 
         //! \brief Get indexed flag
-        [[maybe_unused]] [[nodiscard]] bool is_indexed() const { return indexed; }
+        [[maybe_unused]] [[nodiscard]] constexpr bool is_indexed() const { return indexed; }
 
         //! \brief Get fast flag
-        [[maybe_unused]] [[nodiscard]] bool is_fast() const { return fast; }
+        [[maybe_unused]] [[nodiscard]] constexpr bool is_fast() const { return fast; }
 
         //! \brief Get stored flag
-        [[maybe_unused]] [[nodiscard]] bool is_stored() const { return stored; }
+        [[maybe_unused]] [[nodiscard]] constexpr bool is_stored() const { return stored; }
 
         //! \brief Set indexed flag
         [[maybe_unused]] void set_indexed(bool is_indexed) { this->indexed = is_indexed; }
@@ -287,8 +287,11 @@ namespace bridge::schema {
     static const text_field STORED = // NOLINT(cert-err58-cpp)
         text_field(text_indexing_option::Unindexed, true);
 
-    //! \brief FAST field will be tokenized and indexed
+    //! \brief FAST field will be fast.
     static const numeric_field FAST = numeric_field(false, true, false);
+
+    //! \brief NUMERIC field will be the generic numeric option.
+    static const numeric_field NUMERIC = numeric_field(false, false, false);
 
 } // namespace bridge::schema
 

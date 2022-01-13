@@ -102,20 +102,18 @@ namespace bridge {
         concept Serializable = Primitive<T> || PrimitiveContainer<T> || MemberFunctionSerialize<T> ||
             GlobalFunctionSerialize<T> || PointerToSerializable<T> || ReferenceToSerializable<T>;
 
-        //! \brief Safe serialize the text indexing option.
+        //! \brief Safe serialization of the text indexing option.
         template <Serializable T>
         [[maybe_unused]] std::optional<uint64_t> marshall(output_archive &out, T&& obj) {
             try {
-                // write sequence of arguments passed as parameter
                 out << obj;
-                // return the size of the object.
                 return sizeof(obj);
             } catch (std::exception & /*e*/) {
                 return std::nullopt;
             }
         }
 
-        //! \brief Safe deserialize the text indexing option.
+        //! \brief Safe deserialization of the text indexing option.
         template <Serializable T>
         [[maybe_unused]] static std::optional<T> unmarshall(input_archive &in) {
             try {
