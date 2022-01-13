@@ -92,6 +92,10 @@ namespace bridge::schema {
             return _index_options == TokenizedWithFreqAndPosition;
         }
 
+        [[nodiscard]] constexpr bool is_indexed() const {
+            return _index_options != Unindexed;
+        }
+
         // operator |
         text_indexing_option operator|(const text_indexing_option &other) const {
             // if this == unidexed, return other
@@ -138,47 +142,47 @@ namespace bridge::schema {
     // - Equality comparable
     // - Moveable
     // - Partial ordering
-    struct text_option {
+    struct text_field {
 
         //! \brief Default constructor.
-        text_option() : indexing_options(text_indexing_option::Unindexed), stored(false) {}
+        text_field() : indexing_options(text_indexing_option::Unindexed), stored(false) {}
 
         //! \brief Constructor.
-        text_option(text_indexing_option::Value index_option_value, bool stored)
+        text_field(text_indexing_option::Value index_option_value, bool stored)
             : indexing_options(index_option_value), stored(stored) {}
 
         //! \brief Constructor
-        text_option(text_indexing_option indexing_options, bool stored)
+        text_field(text_indexing_option indexing_options, bool stored)
             : indexing_options(std::move(indexing_options)), stored(stored) {}
 
         //! \brief Copy Constructor.
-        text_option(const text_option &other) = default;
+        text_field(const text_field &other) = default;
 
         //! \brief Assignment operator.
-        text_option &operator=(const text_option &other) = default;
+        text_field &operator=(const text_field &other) = default;
 
         //! \brief Move Constructor.
-        text_option(text_option &&other) noexcept
+        text_field(text_field &&other) noexcept
             : indexing_options(std::move(other.indexing_options)), stored(other.stored) {}
 
         //! \brief Move Assignment operator.
-        text_option &operator=(text_option &&other) noexcept {
+        text_field &operator=(text_field &&other) noexcept {
             indexing_options = other.indexing_options;
             stored = other.stored;
             return *this;
         }
 
         //! \brief Equality operator.
-        bool operator==(const text_option &other) const {
+        bool operator==(const text_field &other) const {
             return static_cast<const text_indexing_option>(indexing_options) == other.indexing_options &&
                    stored == other.stored;
         }
 
         //! \brief Inequality operator.
-        bool operator!=(const text_option &other) const { return !(*this == other); }
+        bool operator!=(const text_field &other) const { return !(*this == other); }
 
         //! \brief Three  way comparison operator.
-        std::strong_ordering operator<=>(const text_option &other) const {
+        std::strong_ordering operator<=>(const text_field &other) const {
             return indexing_options <=> other.indexing_options;
         }
 
@@ -195,7 +199,7 @@ namespace bridge::schema {
         [[maybe_unused]] void set_stored(bool is_stored) { this->stored = is_stored; }
 
         //! \brief Operator |
-        text_option operator|(const text_option &other) const {
+        text_field operator|(const text_field &other) const {
             return {indexing_options | other.indexing_options, stored || other.stored};
         }
 
@@ -218,27 +222,27 @@ namespace bridge::schema {
     // - Equality comparable
     // - Moveable
     // - Partial ordering
-    struct numeric_option {
+    struct numeric_field {
 
         //! \brief Default constructor.
-        numeric_option() : indexed(false), fast(false), stored(false) {}
+        numeric_field() : indexed(false), fast(false), stored(false) {}
 
         //! \brief Constructor.
-        numeric_option(bool indexed, bool fast, bool stored) : indexed(indexed), fast(fast), stored(stored) {}
+        numeric_field(bool indexed, bool fast, bool stored) : indexed(indexed), fast(fast), stored(stored) {}
 
         //! \brief Copy Constructor.
-        numeric_option(const numeric_option &other) = default;
+        numeric_field(const numeric_field &other) = default;
 
         //! \brief Assignment operator.
-        numeric_option &operator=(const numeric_option &other) = default;
+        numeric_field &operator=(const numeric_field &other) = default;
 
         //! \brief Equality operator.
-        bool operator==(const numeric_option &other) const {
+        bool operator==(const numeric_field &other) const {
             return indexed == other.indexed && fast == other.fast && stored == other.stored;
         }
 
         //! \brief Inequality operator.
-        bool operator!=(const numeric_option &other) const { return !(*this == other); }
+        bool operator!=(const numeric_field &other) const { return !(*this == other); }
 
         //! \brief Get indexed flag
         [[maybe_unused]] [[nodiscard]] bool is_indexed() const { return indexed; }
@@ -269,22 +273,22 @@ namespace bridge::schema {
         bool indexed, fast, stored;
     };
 
-    // STRING text_option will be untokenized and indexed
-    static const text_option STRING = // NOLINT(cert-err58-cpp)
-        text_option(text_indexing_option::Untokenized, false);
+    // STRING text_field will be untokenized and indexed
+    static const text_field STRING = // NOLINT(cert-err58-cpp)
+        text_field(text_indexing_option::Untokenized, false);
 
-    // TEXT text_option will be tokenized and indexed
-    static const text_option TEXT = // NOLINT(cert-err58-cpp)
-        text_option(text_indexing_option::TokenizedWithFreqAndPosition, false);
+    // TEXT text_field will be tokenized and indexed
+    static const text_field TEXT = // NOLINT(cert-err58-cpp)
+        text_field(text_indexing_option::TokenizedWithFreqAndPosition, false);
 
     // A stored fields of a document can be retrieved given its DocId.
     // Stored field are stored together and compressed.
     // Reading the stored fields of a document is relatively slow.
-    static const text_option STORED = // NOLINT(cert-err58-cpp)
-        text_option(text_indexing_option::Unindexed, true);
+    static const text_field STORED = // NOLINT(cert-err58-cpp)
+        text_field(text_indexing_option::Unindexed, true);
 
     //! \brief FAST field will be tokenized and indexed
-    static const numeric_option FAST = numeric_option(false, true, false);
+    static const numeric_field FAST = numeric_field(false, true, false);
 
 } // namespace bridge::schema
 

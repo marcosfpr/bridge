@@ -10,7 +10,7 @@ TEST(SchemaOptionsTest, TextFieldOptions) {
     auto string_field = bridge::schema::STRING; // assignment operator
 
     auto another_string_field =
-        bridge::schema::text_option(bridge::schema::text_indexing_option::Untokenized, false); // copy constructor
+        bridge::schema::text_field(bridge::schema::text_indexing_option::Untokenized, false); // copy constructor
 
     ASSERT_EQ(string_field, another_string_field);
     ASSERT_FALSE(string_field.is_stored());
@@ -76,7 +76,7 @@ TEST(SchemaOptionsTest, SerializeTest) {
     {
         bridge::serialization::input_archive in(tmp_file);
 
-        bridge::schema::text_option deserialized_option;
+        bridge::schema::text_field deserialized_option;
         in >> deserialized_option;
         ASSERT_EQ(string_field, deserialized_option);
 
@@ -125,17 +125,17 @@ TEST(SchemaOptionsTest, MarshallTest) {
 
         bridge::serialization::input_archive in(tmp_file);
 
-        bridge::schema::text_option deserialized_option = unmarshall<bridge::schema::text_option>(in).value();
+        bridge::schema::text_field deserialized_option = unmarshall<bridge::schema::text_field>(in).value();
         ASSERT_EQ(string_field, deserialized_option);
 
-        deserialized_option = unmarshall<bridge::schema::text_option>(in).value();
+        deserialized_option = unmarshall<bridge::schema::text_field>(in).value();
         ASSERT_EQ(text_field, deserialized_option);
 
-        deserialized_option = unmarshall<bridge::schema::text_option>(in).value();
+        deserialized_option = unmarshall<bridge::schema::text_field>(in).value();
         ASSERT_EQ(stored_field, deserialized_option);
 
         // wrong deserialization
-        ASSERT_EQ(unmarshall<bridge::schema::text_option>(in), std::nullopt);
+        ASSERT_EQ(unmarshall<bridge::schema::text_field>(in), std::nullopt);
     }
 
     tmp_file.close();
@@ -147,7 +147,7 @@ TEST(SchemaOptionsTest, MarshallTest) {
 TEST(SchemaOptionsTest, NumericOptions) {
     auto numeric_field = bridge::schema::FAST;
 
-    auto another_numeric_field = bridge::schema::numeric_option(false, true, false);
+    auto another_numeric_field = bridge::schema::numeric_field(false, true, false);
 
     ASSERT_TRUE(numeric_field.is_fast());
     ASSERT_FALSE(numeric_field.is_indexed());
@@ -188,7 +188,7 @@ TEST(SchemaOptionsTest, NumericMarshall) {
         using namespace bridge::serialization;
 
         input_archive in(tmp_file);
-        auto deserialized_numeric_field = unmarshall<bridge::schema::numeric_option>(in).value();
+        auto deserialized_numeric_field = unmarshall<bridge::schema::numeric_field>(in).value();
         ASSERT_EQ(numeric_field, deserialized_numeric_field);
     }
 
