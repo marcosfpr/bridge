@@ -121,6 +121,40 @@ namespace bridge::schema {
             return _index_options <=> other._index_options;
         }
 
+        //! \brief Get string representation of indexing options.
+        [[nodiscard]] std::string get_str() const {
+            switch (_index_options) {
+                case Unindexed:
+                    return "unindexed";
+                case Untokenized:
+                    return "untokenized";
+                case TokenizedNoFreq:
+                    return "tokenized_no_freq";
+                case TokenizedWithFreq:
+                    return "tokenized_with_freq";
+                case TokenizedWithFreqAndPosition:
+                    return "tokenized_with_freq_and_position";
+                default:
+                    throw bridge_error("Unknown indexing option");
+            }
+        }
+
+        [[nodiscard]] static text_indexing_option from_str(const std::string & str) {
+            if (str == "unindexed") {
+                return Unindexed;
+            } else if (str == "untokenized") {
+                return Untokenized;
+            } else if (str == "tokenized_no_freq") {
+                return TokenizedNoFreq;
+            } else if (str == "tokenized_with_freq") {
+                return TokenizedWithFreq;
+            } else if (str == "tokenized_with_freq_and_position") {
+                return TokenizedWithFreqAndPosition;
+            } else {
+                throw bridge_error("Unknown indexing option");
+            }
+        }
+
         // Allow  Hashing
         friend std::hash<text_indexing_option>;
 
@@ -209,6 +243,28 @@ namespace bridge::schema {
             ar &stored;
         }
 
+        //! \brief JSON serialization
+        [[nodiscard]] serialization::json_t to_json() const {
+            serialization::json_t text_field_json = {
+                    {"indexing", indexing_options.get_str()},
+                    {"stored", is_stored()}
+            };
+            return text_field_json;
+        }
+
+        //! \brief JSON deserialization
+        [[maybe_unused]] static text_field from_json(const serialization::json_t &json) {
+            if (json.find("indexing") == json.end()) {
+                throw bridge_error("Missing indexing option");
+            }
+            if (json.find("stored") == json.end()) {
+                throw bridge_error("Missing stored flag");
+            }
+            text_indexing_option indexing_option = text_indexing_option::from_str(json.at("indexing"));
+            bool stored = json.at("stored").get<bool>();
+            return {indexing_option, stored};
+        }
+
       private:
         text_indexing_option indexing_options;
         bool stored;
@@ -267,6 +323,33 @@ namespace bridge::schema {
             ar &indexed;
             ar &fast;
             ar &stored;
+        }
+
+        //! \brief JSON serialization
+        [[nodiscard]] serialization::json_t to_json() const {
+            serialization::json_t numeric_field_json = {
+                    {"indexed", is_indexed()},
+                    {"fast", is_fast()},
+                    {"stored", is_stored()}
+            };
+            return numeric_field_json;
+        }
+
+        //! \brief JSON deserialization
+        [[maybe_unused]] static numeric_field from_json(const serialization::json_t &json) {
+            if (json.find("indexed") == json.end()) {
+                throw bridge_error("Missing indexed flag");
+            }
+            if (json.find("fast") == json.end()) {
+                throw bridge_error("Missing fast flag");
+            }
+            if (json.find("stored") == json.end()) {
+                throw bridge_error("Missing stored flag");
+            }
+            bool indexed = json.at("indexed").get<bool>();
+            bool fast = json.at("fast").get<bool>();
+            bool stored = json.at("stored").get<bool>();
+            return {indexed, fast, stored};
         }
 
       private:

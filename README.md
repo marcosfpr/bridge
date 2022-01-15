@@ -17,3 +17,5 @@
 - [ ] JSON Schema serialization/deserialization.
 - [ ] Field implementation
 - [ ] Schema implementation
+- [ ] Documentation about the whole process.
+- [ ] Logging errors. (fmt)

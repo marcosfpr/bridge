@@ -24,9 +24,16 @@ if(NOT BUILD_CONAN)
         FIND_PACKAGE_ARGUMENTS ""
     )
 
+    # GTest library
+    CPMAddPackage(
+            NAME nlohmann_json
+            VERSION 3.10.5
+            OPTIONS
+            "JSON_BuildTests OFF"
+    )
+
     
 endif()
-
 
 add_definitions(-DBOOST_ALL_DYN_LINK)
     
@@ -42,7 +49,7 @@ target_include_directories(
 if(BUILD_CONAN)
     target_link_libraries(bridge PRIVATE ${CONAN_LIBS} ${FILE_SYSTEM_LIB} Threads::Threads)
 else()
-    target_link_libraries(bridge PRIVATE Boost::boost ${FILE_SYSTEM_LIB} Threads::Threads)
+    target_link_libraries(bridge PRIVATE Boost::boost nlohmann_json::nlohmann_json ${FILE_SYSTEM_LIB} Threads::Threads)
 endif()
 
 target_compile_features(bridge PUBLIC cxx_std_20)

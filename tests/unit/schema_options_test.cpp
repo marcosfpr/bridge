@@ -1,5 +1,6 @@
 #include <bridge.hpp>
 
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -159,9 +160,7 @@ TEST(SchemaOptionsTest, NumericOptions) {
     ASSERT_FALSE(numeric_field.is_fast());
 
     ASSERT_NE(numeric_field, another_numeric_field);
-
 }
-
 
 TEST(SchemaOptionsTest, NumericMarshall) {
 
@@ -195,5 +194,55 @@ TEST(SchemaOptionsTest, NumericMarshall) {
     tmp_file.close();
     // remove file
     std::remove(tmp_file_name.c_str());
+}
 
+TEST(SchemaOptionsTest, MarshallJSON) {
+    auto numeric_field_ = bridge::schema::FAST;
+    auto text_field_ = bridge::schema::TEXT;
+
+    // create temporary json file
+    std::string tmp_file_text = "./tmp_file.json";
+
+    std::ofstream tmp_file_ofstream;
+    tmp_file_ofstream.open(tmp_file_text);
+    {
+        // serialize to json
+        auto s = bridge::serialization::marshall_json(tmp_file_ofstream, text_field_);
+        ASSERT_EQ(s.value(), sizeof(text_field_));
+    }
+    tmp_file_ofstream.close();
+
+    // open for reading
+    std::ifstream tmp_file_ifstream;
+    tmp_file_ifstream.open(tmp_file_text);
+    {
+        // deserialize from json
+        auto from_json_field = bridge::serialization::unmarshall_json<bridge::schema::text_field>(tmp_file_ifstream);
+        ASSERT_EQ(from_json_field, text_field_);
+    }
+    // close and remove temporary json file
+    tmp_file_ifstream.close();
+    std::remove(tmp_file_text.c_str());
+
+    // create temporary json file
+    std::string tmp_file_numeric = "./tmp_file.json";
+
+    tmp_file_ofstream.open(tmp_file_numeric);
+    {
+        // serialize to json
+        auto s = bridge::serialization::marshall_json(tmp_file_ofstream, numeric_field_);
+        ASSERT_EQ(s.value(), sizeof(numeric_field_));
+    }
+    tmp_file_ofstream.close();
+
+    // open for reading
+    tmp_file_ifstream.open(tmp_file_numeric);
+    {
+        // deserialize from json
+        auto from_json_field = bridge::serialization::unmarshall_json<bridge::schema::numeric_field>(tmp_file_ifstream);
+        ASSERT_EQ(from_json_field, numeric_field_);
+    }
+    // close and remove temporary json file
+    tmp_file_ifstream.close();
+    std::remove(tmp_file_numeric.c_str());
 }

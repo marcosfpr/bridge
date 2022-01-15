@@ -27,6 +27,7 @@
 
 #include "./options.hpp"
 #include "./field.hpp"
+#include "./field_entry.hpp"
 
 namespace bridge::schema {
 
