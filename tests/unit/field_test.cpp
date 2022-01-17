@@ -51,27 +51,54 @@ TEST(FieldTest, FieldEntry) {
     using namespace bridge::schema;
     {
         // Constructor
-       field_entry fe1 = field_entry("title",  field_type(STRING));
+        field_entry fe1 = field_entry("title", field_type(STRING));
 
-       field_entry fe2 = fe1;
-       field_entry fe3 = field_entry(fe2);
+        field_entry fe2 = fe1;
+        field_entry fe3 = field_entry(fe2);
 
-       EXPECT_EQ(fe1.name(), fe2.name());
-       EXPECT_EQ(fe3.type(), fe2.type());
+        EXPECT_EQ(fe1.name(), fe2.name());
+        EXPECT_EQ(fe3.type(), fe2.type());
 
-       auto fe4 = field_entry<text_field>::create("title", TEXT);
+        auto fe4 = field_entry<text_field>::create("title", TEXT);
 
-       EXPECT_EQ(fe1.name(), fe4.name());
-       EXPECT_NE(fe1.type(), fe4.type());
+        EXPECT_EQ(fe1.name(), fe4.name());
+        EXPECT_NE(fe1.type(), fe4.type());
 
-       auto fe5 = field_entry<text_field>::create("title", STORED);
+        auto fe5 = field_entry<text_field>::create("title", STORED);
 
-       EXPECT_EQ(fe1.is_indexed(), true);
-       EXPECT_EQ(fe5.is_indexed(), false);
+        EXPECT_EQ(fe1.is_indexed(), true);
+        EXPECT_EQ(fe5.is_indexed(), false);
 
+        // create temporary file
+        std::string tmp_file = "tmp_file.json";
+        std::ofstream ofs(tmp_file);
+        {
+            // serialize to json
+            auto s = bridge::serialization::marshall_json(ofs, fe1);
+            ASSERT_EQ(s, sizeof(fe1));
+        }
+        ofs.close();
+
+        // open for reading
+        std::ifstream ifs;
+        ifs.open(tmp_file);
+        {
+            // deserialize from json
+            bridge::serialization::JSONSerializable auto from_json_entry =
+                bridge::serialization::unmarshall_json<field_entry<text_field>>(ifs);
+            ASSERT_EQ(from_json_entry, fe1);
+
+            // print all file  buffer
+            std::stringstream ss;
+            ss << ifs.rdbuf();
+            std::cout << ss.str() << std::endl;
+        }
+        // close and remove temporary json file
+        ifs.close();
+        std::remove(tmp_file.c_str());
     }
 
-   // Numeric fields
+    // Numeric fields
     {
         field_entry fe1 = field_entry("revenue", field_type(NUMERIC));
         field_entry fe3 = field_entry<numeric_field>::create(fe1.name(), FAST);
@@ -81,11 +108,10 @@ TEST(FieldTest, FieldEntry) {
 
         EXPECT_EQ(fe3.is_indexed(), false);
         EXPECT_EQ(fe3.is_numeric_fast(), true);
-
     }
 }
 
-TEST(FieldTest,  FieldValue) {
+TEST(FieldTest, FieldValue) {
 
     using namespace bridge::schema;
     {
@@ -103,7 +129,6 @@ TEST(FieldTest,  FieldValue) {
             field_value fv4 = std::move(fv3);
             EXPECT_EQ(fv4.value(), fv2.value());
         }
-
     }
 }
 
@@ -134,7 +159,54 @@ TEST(FieldTest, Field) {
     EXPECT_EQ(*f1.get_value(), 23);
     EXPECT_EQ(*f2.get_value(), "foo");
 
-
     EXPECT_EQ(f1.hash(), field<unsigned int>(0, 1203).hash());
+}
+
+TEST(FieldTest, FieldMarshall) {
+    using namespace bridge::schema;
+
+    field f1 = field<unsigned int>(0, 23);
+    field f2 = field<std::string>(1, "foo");
+
+    // create temporary binary file
+    std::string tmp_file_name = "./tmp_file";
+    std::fstream tmp_file(tmp_file_name, std::ios::out | std::ios::binary);
+
+    //  serialize to file
+    unsigned long total_bytes_write = 0L;
+    {
+        using namespace bridge::serialization;
+
+        output_archive out(tmp_file);
+        total_bytes_write += marshall(out, f1);
+        total_bytes_write += marshall(out, f2);
+    }
+
+    ASSERT_EQ(total_bytes_write, sizeof(f1) + sizeof(f2));
+
+    tmp_file.close();
+    tmp_file.open(tmp_file_name, std::ios::in | std::ios::binary);
+
+    // deserialize from file
+    {
+        using namespace bridge::serialization;
+
+        input_archive in(tmp_file);
+
+        Serializable auto deserialized_numeric_option = unmarshall<field<unsigned int>>(in);
+        ASSERT_EQ(f1, deserialized_numeric_option);
+        ASSERT_EQ(f1.get_value().value(), deserialized_numeric_option.get_value().value());
+
+        Serializable auto deserialized_str_option = unmarshall<field<std::string>>(in);
+        ASSERT_EQ(f2, deserialized_str_option);
+        ASSERT_EQ(f2.get_value().value(), deserialized_str_option.get_value().value());
+
+        // wrong deserialization
+        ASSERT_ANY_THROW(unmarshall<bridge::schema::text_field>(in));
+    }
+
+    tmp_file.close();
+
+    std::remove(tmp_file_name.c_str());
 
 }

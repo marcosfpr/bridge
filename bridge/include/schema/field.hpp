@@ -37,6 +37,7 @@ namespace bridge::schema {
      template <FieldValue V>
     class field {
       public:
+
         /// \brief Default constructor
         explicit field() = default;
 
@@ -80,6 +81,14 @@ namespace bridge::schema {
 
         /// \brief Hashing function
         [[nodiscard]] [[maybe_unused]] std::size_t hash() const { return std::hash<id_t>{}(id); }
+
+
+        /// \brief Serialization of field it's trivial
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
+            ar & id;
+            ar & value;
+        }
 
       private:
         field_value<V> value;

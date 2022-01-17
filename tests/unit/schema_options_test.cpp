@@ -110,9 +110,9 @@ TEST(SchemaOptionsTest, MarshallTest) {
         using namespace bridge::serialization;
 
         bridge::serialization::output_archive out(tmp_file);
-        total_bytes_write += marshall(out, string_field).value();
-        total_bytes_write += marshall(out, text_field).value();
-        total_bytes_write += marshall(out, stored_field).value();
+        total_bytes_write += marshall(out, string_field);
+        total_bytes_write += marshall(out, text_field);
+        total_bytes_write += marshall(out, stored_field);
     }
 
     ASSERT_EQ(total_bytes_write, sizeof(string_field) + sizeof(text_field) + sizeof(stored_field));
@@ -126,17 +126,17 @@ TEST(SchemaOptionsTest, MarshallTest) {
 
         bridge::serialization::input_archive in(tmp_file);
 
-        bridge::schema::text_field deserialized_option = unmarshall<bridge::schema::text_field>(in).value();
+        bridge::serialization::Serializable auto deserialized_option = unmarshall<bridge::schema::text_field>(in);
         ASSERT_EQ(string_field, deserialized_option);
 
-        deserialized_option = unmarshall<bridge::schema::text_field>(in).value();
+        deserialized_option = unmarshall<bridge::schema::text_field>(in);
         ASSERT_EQ(text_field, deserialized_option);
 
-        deserialized_option = unmarshall<bridge::schema::text_field>(in).value();
+        deserialized_option = unmarshall<bridge::schema::text_field>(in);
         ASSERT_EQ(stored_field, deserialized_option);
 
         // wrong deserialization
-        ASSERT_EQ(unmarshall<bridge::schema::text_field>(in), std::nullopt);
+        ASSERT_ANY_THROW(unmarshall<bridge::schema::text_field>(in));
     }
 
     tmp_file.close();
@@ -175,7 +175,7 @@ TEST(SchemaOptionsTest, NumericMarshall) {
         using namespace bridge::serialization;
 
         output_archive out(tmp_file);
-        ASSERT_EQ(sizeof(numeric_field), marshall(out, numeric_field).value());
+        ASSERT_EQ(sizeof(numeric_field), marshall(out, numeric_field));
     }
 
     tmp_file.close();
@@ -187,7 +187,8 @@ TEST(SchemaOptionsTest, NumericMarshall) {
         using namespace bridge::serialization;
 
         input_archive in(tmp_file);
-        auto deserialized_numeric_field = unmarshall<bridge::schema::numeric_field>(in).value();
+        bridge::serialization::Serializable auto deserialized_numeric_field =
+            unmarshall<bridge::schema::numeric_field>(in);
         ASSERT_EQ(numeric_field, deserialized_numeric_field);
     }
 
@@ -208,7 +209,7 @@ TEST(SchemaOptionsTest, MarshallJSON) {
     {
         // serialize to json
         auto s = bridge::serialization::marshall_json(tmp_file_ofstream, text_field_);
-        ASSERT_EQ(s.value(), sizeof(text_field_));
+        ASSERT_EQ(s, sizeof(text_field_));
     }
     tmp_file_ofstream.close();
 
@@ -217,7 +218,8 @@ TEST(SchemaOptionsTest, MarshallJSON) {
     tmp_file_ifstream.open(tmp_file_text);
     {
         // deserialize from json
-        auto from_json_field = bridge::serialization::unmarshall_json<bridge::schema::text_field>(tmp_file_ifstream);
+        bridge::serialization::JSONSerializable auto from_json_field =
+            bridge::serialization::unmarshall_json<bridge::schema::text_field>(tmp_file_ifstream);
         ASSERT_EQ(from_json_field, text_field_);
     }
     // close and remove temporary json file
@@ -231,7 +233,7 @@ TEST(SchemaOptionsTest, MarshallJSON) {
     {
         // serialize to json
         auto s = bridge::serialization::marshall_json(tmp_file_ofstream, numeric_field_);
-        ASSERT_EQ(s.value(), sizeof(numeric_field_));
+        ASSERT_EQ(s, sizeof(numeric_field_));
     }
     tmp_file_ofstream.close();
 
@@ -239,7 +241,8 @@ TEST(SchemaOptionsTest, MarshallJSON) {
     tmp_file_ifstream.open(tmp_file_numeric);
     {
         // deserialize from json
-        auto from_json_field = bridge::serialization::unmarshall_json<bridge::schema::numeric_field>(tmp_file_ifstream);
+        bridge::serialization::JSONSerializable auto from_json_field =
+            bridge::serialization::unmarshall_json<bridge::schema::numeric_field>(tmp_file_ifstream);
         ASSERT_EQ(from_json_field, numeric_field_);
     }
     // close and remove temporary json file

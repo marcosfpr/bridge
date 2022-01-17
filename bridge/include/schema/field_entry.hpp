@@ -38,8 +38,14 @@ namespace bridge::schema {
 
     // Concept of a field type: a field type is a string  type or numeric type
     // todo: define better with good constraints.
+
+    // Concept that defines a function called get_name() that returns a string which is the name of the field
+    template <typename T> concept HasName = requires(T t) {
+        { t.get_name() } -> std::same_as<std::string>;
+    };
+
     template <typename T>
-    concept FieldType = std::is_same_v<T, text_field> || std::is_same_v<T, numeric_field>;
+    concept FieldType = (std::is_same_v<T, text_field> || std::is_same_v<T, numeric_field>) && HasName<T>;
 
 
     /**
@@ -53,7 +59,7 @@ namespace bridge::schema {
         explicit field_type(T type) : _type(std::move(type)) {}
 
         /// \brief Default Constructor
-        explicit field_type() = default;
+        field_type() = default;
 
         /// \brief Destructor
         ~field_type() noexcept = default;
@@ -93,16 +99,18 @@ namespace bridge::schema {
             return _type != other._type;
         }
 
-//        // JSONSerializable
-//        serialization::json_t to_json() const {
-//            serialization::json_t entry_json = {
-//
-//            };
-//        }
-//
-//        static field_type from_json(const serialization::json_t &j) {
-//            _type = j.get<T>();
-//        }
+        //! \brief JSON serialization
+        [[nodiscard]] serialization::json_t to_json() const {
+            return {
+                {"field", T::get_name()},
+                {"options", _type.to_json()}
+            };
+        }
+
+        //! \brief JSON deserialization
+        [[maybe_unused]] static field_type from_json(const serialization::json_t &json) {
+            return field_type(T::from_json(json["options"]));
+        }
 
       private:
         T _type;
@@ -117,8 +125,9 @@ namespace bridge::schema {
     template <FieldType T>
     class field_entry {
       public:
+
         /// \brief Constructor
-        explicit field_entry(std::string name, field_type<T> type) : _name(std::move(name)), _type(std::move(type)) {}
+        field_entry(std::string name, field_type<T> type) : _name(std::move(name)), _type(std::move(type)) {}
 
         /// \brief Copy Constructor
         field_entry(const field_entry &) = default;
@@ -159,6 +168,29 @@ namespace bridge::schema {
                 return static_cast<numeric_field>(_type.get()).is_fast();
             }
             return false;
+        }
+
+        //! \brief JSON Serialization
+        [[nodiscard]] serialization::json_t to_json() const {
+            return {
+                {"name", _name},
+                {"type", _type.to_json()}
+            };
+        }
+
+        //! \brief JSON Deserialization
+        [[maybe_unused]] static field_entry from_json(const serialization::json_t &json) {
+            return field_entry(json["name"], field_type<T>::from_json(json["type"]));
+        }
+
+        //! \brief Equality operator
+        [[nodiscard]] bool operator==(const field_entry &other) const {
+            return _name == other._name && _type == other._type;
+        }
+
+        //! \brief Inequality operator
+        [[nodiscard]] bool operator!=(const field_entry &other) const {
+            return _name != other._name || _type != other._type;
         }
 
         // Avoid move semantics

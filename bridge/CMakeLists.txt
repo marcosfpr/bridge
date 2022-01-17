@@ -7,7 +7,7 @@
 set(
     SOURCES
     src/main.cpp
-    )
+)
     
 add_library(
     bridge 

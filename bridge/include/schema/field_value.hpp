@@ -26,13 +26,14 @@
 #include <concepts>
 #include <string>
 
+#include "../common/serialization.hpp"
+
 namespace bridge::schema {
-    // todo: binary serialization
 
     // Concept of a field value: a field value is a string or numeric value
     // // todo: define better with good constraints.
     template <typename T>
-    concept FieldValue = std::is_same_v<T, std::string> || std::unsigned_integral<T>;
+    concept FieldValue = std::is_same_v<T, std::string> || std::unsigned_integral<T> && serialization::Serializable<T>;
 
     using id_t = unsigned short int;
 
@@ -40,8 +41,7 @@ namespace bridge::schema {
      * \brief Value represents the value of a any field. It is generic over all of the possible field types.
      *
      */
-    template <FieldValue V>
-    class field_value {
+    template <FieldValue V> class field_value {
       public:
         /// \brief Default Constructor
         field_value() = default;
@@ -53,13 +53,13 @@ namespace bridge::schema {
         field_value(const field_value &) = default;
 
         /// \brief Move Constructor
-        field_value(field_value &&)  noexcept = default;
+        field_value(field_value &&) noexcept = default;
 
         /// \brief Copy Assignment
         field_value &operator=(const field_value &) = default;
 
         /// \brief Move Assignment
-        field_value &operator=(field_value &&)  noexcept = default;
+        field_value &operator=(field_value &&) noexcept = default;
 
         /// \brief Returns the field value
         [[nodiscard]] [[maybe_unused]] V value() const { return _value; }
@@ -68,18 +68,23 @@ namespace bridge::schema {
         [[nodiscard]] [[maybe_unused]] V operator*() const { return _value; }
 
         /// \brief implicit cast int to field_value
-        template<typename T> requires std::is_integral_v<T>
+        template <typename T>
+        requires std::is_integral_v<T>
         [[maybe_unused]] static field_value create(T value) { return field_value(value); }
 
         /// \brief implicit cast string to field_value
-        [[maybe_unused]] static field_value create(std::string value) {
-            return field_value(std::move(value));
+        [[maybe_unused]] static field_value create(std::string value) { return field_value(std::move(value)); }
+
+        /// \brief Serialization of field value it's trivial
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
+            ar &_value;
         }
 
       private:
         V _value;
     };
 
-}
+} // namespace bridge::schema
 
 #endif // BRIDGE_FIELD_VALUE_HPP
