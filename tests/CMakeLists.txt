@@ -18,7 +18,7 @@ add_executable(
 target_compile_features(test_bridge PUBLIC cxx_std_20)
 
 if (BUILD_CONAN)
-        target_link_libraries(test_bridge bridge ${CONAN_LIBS})
+        target_link_libraries(test_bridge bridge ${CONAN_LIBS}  Threads::Threads)
 else()
         # GTest library
         CPMAddPackage(
@@ -33,8 +33,7 @@ endif()
 
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
-target_link_libraries(test_bridge bridge Threads::Threads)
-# target_link_libraries(func_ltrpp ltr Threads::Threads)
+target_link_libraries(test_bridge bridge)
 
 # Create testing target and redirect its output to `Testing` folder
 add_test(NAME test_bridge COMMAND test_bridge WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing)
@@ -43,7 +42,7 @@ add_test(NAME test_bridge COMMAND test_bridge WORKING_DIRECTORY ${CMAKE_BINARY_D
 set_tests_properties(test_bridge
         PROPERTIES
         TIMEOUT 30
-        ENVIRONMENT MOVIES_BENCHMARK=${MOVIES_BENCHMARK}
+#        ENVIRONMENT MOVIES_BENCHMARK=${MOVIES_BENCHMARK}
 )
 # set_tests_properties(func_ltrpp
 #         PROPERTIES

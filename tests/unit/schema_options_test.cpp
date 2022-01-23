@@ -1,6 +1,6 @@
 #include <bridge.hpp>
 
-#include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <string>
 
@@ -88,10 +88,6 @@ TEST(SchemaOptionsTest, SerializeTest) {
         ASSERT_EQ(stored_field, deserialized_option);
     }
 
-    tmp_file.close();
-
-    // remove temporary file
-    std::remove(tmp_file_name.c_str());
 }
 
 TEST(SchemaOptionsTest, MarshallTest) {
@@ -109,10 +105,9 @@ TEST(SchemaOptionsTest, MarshallTest) {
     {
         using namespace bridge::serialization;
 
-        bridge::serialization::output_archive out(tmp_file);
-        total_bytes_write += marshall(out, string_field);
-        total_bytes_write += marshall(out, text_field);
-        total_bytes_write += marshall(out, stored_field);
+        total_bytes_write += marshall(tmp_file, string_field);
+        total_bytes_write += marshall(tmp_file, text_field);
+        total_bytes_write += marshall(tmp_file, stored_field);
     }
 
     ASSERT_EQ(total_bytes_write, sizeof(string_field) + sizeof(text_field) + sizeof(stored_field));
@@ -124,19 +119,18 @@ TEST(SchemaOptionsTest, MarshallTest) {
     {
         using namespace bridge::serialization;
 
-        bridge::serialization::input_archive in(tmp_file);
+        bridge::serialization::Serializable auto deserialized_option =
+            unmarshall<bridge::schema::text_field>(tmp_file);
 
-        bridge::serialization::Serializable auto deserialized_option = unmarshall<bridge::schema::text_field>(in);
         ASSERT_EQ(string_field, deserialized_option);
 
-        deserialized_option = unmarshall<bridge::schema::text_field>(in);
+        deserialized_option = unmarshall<bridge::schema::text_field>(tmp_file);
         ASSERT_EQ(text_field, deserialized_option);
 
-        deserialized_option = unmarshall<bridge::schema::text_field>(in);
+        deserialized_option = unmarshall<bridge::schema::text_field>(tmp_file);
         ASSERT_EQ(stored_field, deserialized_option);
 
-        // wrong deserialization
-        ASSERT_ANY_THROW(unmarshall<bridge::schema::text_field>(in));
+        ASSERT_ANY_THROW(unmarshall<bridge::schema::text_field>(tmp_file));
     }
 
     tmp_file.close();
@@ -173,9 +167,7 @@ TEST(SchemaOptionsTest, NumericMarshall) {
     // serialize to file
     {
         using namespace bridge::serialization;
-
-        output_archive out(tmp_file);
-        ASSERT_EQ(sizeof(numeric_field), marshall(out, numeric_field));
+        ASSERT_EQ(sizeof(numeric_field), marshall(tmp_file, numeric_field));
     }
 
     tmp_file.close();
@@ -186,9 +178,8 @@ TEST(SchemaOptionsTest, NumericMarshall) {
     {
         using namespace bridge::serialization;
 
-        input_archive in(tmp_file);
         bridge::serialization::Serializable auto deserialized_numeric_field =
-            unmarshall<bridge::schema::numeric_field>(in);
+            unmarshall<bridge::schema::numeric_field>(tmp_file);
         ASSERT_EQ(numeric_field, deserialized_numeric_field);
     }
 

@@ -177,9 +177,8 @@ TEST(FieldTest, FieldMarshall) {
     {
         using namespace bridge::serialization;
 
-        output_archive out(tmp_file);
-        total_bytes_write += marshall(out, f1);
-        total_bytes_write += marshall(out, f2);
+        total_bytes_write += marshall(tmp_file, f1);
+        total_bytes_write += marshall(tmp_file, f2);
     }
 
     ASSERT_EQ(total_bytes_write, sizeof(f1) + sizeof(f2));
@@ -191,18 +190,16 @@ TEST(FieldTest, FieldMarshall) {
     {
         using namespace bridge::serialization;
 
-        input_archive in(tmp_file);
-
-        Serializable auto deserialized_numeric_option = unmarshall<field<unsigned int>>(in);
+        Serializable auto deserialized_numeric_option = unmarshall<field<unsigned int>>(tmp_file);
         ASSERT_EQ(f1, deserialized_numeric_option);
         ASSERT_EQ(f1.get_value().value(), deserialized_numeric_option.get_value().value());
 
-        Serializable auto deserialized_str_option = unmarshall<field<std::string>>(in);
+        Serializable auto deserialized_str_option = unmarshall<field<std::string>>(tmp_file);
         ASSERT_EQ(f2, deserialized_str_option);
         ASSERT_EQ(f2.get_value().value(), deserialized_str_option.get_value().value());
 
         // wrong deserialization
-        ASSERT_ANY_THROW(unmarshall<bridge::schema::text_field>(in));
+        ASSERT_ANY_THROW(unmarshall<bridge::schema::text_field>(tmp_file));
     }
 
     tmp_file.close();

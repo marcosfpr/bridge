@@ -3,10 +3,10 @@
 #######################################################
 
 
-
 set(
     SOURCES
-    src/main.cpp
+    src/schema/options.cpp
+    src/schema/field_entry.cpp
 )
     
 add_library(
@@ -32,7 +32,6 @@ if(NOT BUILD_CONAN)
             "JSON_BuildTests OFF"
     )
 
-    
 endif()
 
 add_definitions(-DBOOST_ALL_DYN_LINK)

@@ -24,7 +24,7 @@
 #include <concepts>
 #include <utility>
 
-#ifndef BRIDGE_FIELD_ENTRY_HPP
+#ifndef BRIDGE_FIELD_ENTRY_HPP_
 #define BRIDGE_FIELD_ENTRY_HPP_
 
 namespace bridge::schema {
@@ -39,78 +39,116 @@ namespace bridge::schema {
     // Concept of a field type: a field type is a string  type or numeric type
     // todo: define better with good constraints.
 
-    // Concept that defines a function called get_name() that returns a string which is the name of the field
+    /// @brief Concept that defines a function called get_name() that returns a string which is the name of the field
     template <typename T> concept HasName = requires(T t) {
         { t.get_name() } -> std::same_as<std::string>;
     };
 
+    /// @brief Concept that defines a FieldType based on  the two possible types of fields: text and numeric.
     template <typename T>
     concept FieldType = (std::is_same_v<T, text_field> || std::is_same_v<T, numeric_field>) && HasName<T>;
 
 
     /**
-     * Holds general information about the field type.
+     * @brief Holds general information about the field type.
      */
     template <FieldType T>
     class field_type {
 
       public:
-        /// \brief Constructor
-        explicit field_type(T type) : _type(std::move(type)) {}
+        /**
+         * @brief Explicit Constructor.
+         * @param type Object of the field's type.
+         */
+        explicit field_type(T type);
 
-        /// \brief Default Constructor
-        field_type() = default;
+        /**
+         * @brief Default Constructor.
+         */
+        field_type();
 
-        /// \brief Destructor
-        ~field_type() noexcept = default;
+        /**
+         * @brief Destructor.
+         */
+        ~field_type() noexcept;
 
-        /// \brief Copy Constructor
-        field_type(const field_type &) = default;
+        /**
+         * @brief Copy Constructor.
+         * @param other Object to be copied.
+         */
+        field_type(const field_type &);
 
-        /// \brief Move Constructor
-        field_type(field_type &&)  noexcept = default;
+        /**
+         * @brief Move Constructor.
+         * @param other Object to be moved.
+         */
+        field_type(field_type &&)  noexcept;
 
-        /// \brief Copy Assignment
-        field_type &operator=(const field_type &) = default;
+        /**
+         * @brief Copy Assignment Operator.
+         * @param other Object to be copied.
+         * @return Reference to the object.
+         */
+        field_type &operator=(const field_type &);
 
-        /// \brief Move Assignment
-        field_type &operator=(field_type &&)  noexcept = default;
+        /**
+         * @brief Move Assignment Operator.
+         * @param other Object to be moved.
+         * @return Reference to the object.
+         */
+        field_type &operator=(field_type &&)  noexcept;
 
-        /// \brief Returns the field type
-        [[nodiscard]] T get() const { return _type; }
+        /**
+         * @brief Returns the field type.
+         * @return Field type object.
+         */
+        [[nodiscard]] T get() const;
 
+        /**
+         * @brief Check if the field type is text.
+         * @return True if the field type is text, false otherwise.
+         */
         [[nodiscard]] constexpr bool is_text() const {
             // check if generic T is of type: text_field
             return std::is_same_v<T, text_field>;
         }
 
+        /**
+         * @brief Check if the field type is numeric.
+         * @return True if the field type is numeric, false otherwise.
+         */
         [[nodiscard]] constexpr bool is_numeric() const {
             // check if generic T is of type: numeric_field
             return std::is_same_v<T, numeric_field>;
         }
 
-        /// \brief Equality operator
-        [[nodiscard]] bool operator==(const field_type &other) const {
-            return _type == other._type;
-        }
+        /**
+         * @brief Equality operator.
+         * @param other Other object to be compared.
+         * @return True if the objects are equal, false otherwise.
+         */
+        [[nodiscard]] bool operator==(const field_type &other) const;
 
-        /// \brief Inequality operator
-        [[nodiscard]] bool operator!=(const field_type &other) const {
-            return _type != other._type;
-        }
+        /**
+         * @brief Inequality operator.
+         * @param other Other object to be compared.
+         * @return True if the objects are not equal, false otherwise.
+         */
+        [[nodiscard]] bool operator!=(const field_type &other) const;
 
-        //! \brief JSON serialization
-        [[nodiscard]] serialization::json_t to_json() const {
-            return {
-                {"field", T::get_name()},
-                {"options", _type.to_json()}
-            };
-        }
+        /**
+         * @brief Converts a field type to a JSON.
+         * @return A JSON object.
+         */
+        [[nodiscard]] serialization::json_t to_json() const;
 
-        //! \brief JSON deserialization
-        [[maybe_unused]] static field_type from_json(const serialization::json_t &json) {
-            return field_type(T::from_json(json["options"]));
-        }
+
+        /**
+         * @brief Converts a JSON to a field type.
+         * @param json JSON object.
+         * @return Field type object.
+         */
+        [[maybe_unused]] static field_type from_json(const serialization::json_t &json);
 
       private:
         T _type;
@@ -120,38 +158,61 @@ namespace bridge::schema {
      *  \brief A FieldEntry represents a field and its configuration. Schema are a collection of FieldEntry
      *  \details It consists  of:
      *  - a field  name;
-     *  - a  field type, itself wrapping up options describing  how the  field  should be indexed.
+     *  - a field type, itself wrapping up options describing  how the  field  should be indexed.
      */
     template <FieldType T>
     class field_entry {
       public:
 
-        /// \brief Constructor
-        field_entry(std::string name, field_type<T> type) : _name(std::move(name)), _type(std::move(type)) {}
+        /**
+         * @brief Explicit Constructor.
+         * @param name Name of the field.
+         * @param type Object of the field's type.
+         */
+        explicit field_entry(std::string name, field_type<T> type);
 
-        /// \brief Copy Constructor
-        field_entry(const field_entry &) = default;
+        /**
+         * @brief  Copy constructor.
+         */
+        field_entry(const field_entry &);
 
-        /// \brief Destructor
-        ~field_entry() = default;
+        /**
+         * Destructor
+         */
+        virtual ~field_entry();
 
-        /// \brief Get the field name
-        [[nodiscard]] [[maybe_unused]] std::string name() const { return _name; }
+        /**
+         * @brief Get the name of the field.
+         * @return String containing the name of the field.
+         */
+        [[nodiscard]] [[maybe_unused]] std::string name() const;
 
-        /// \brief Get the field type
-        [[nodiscard]] [[maybe_unused]] field_type<T> type() const { return _type; }
+        /**
+         * @brief Get the field type.
+         * @return Field type object.
+         */
+        [[nodiscard]] [[maybe_unused]] field_type<T> type() const;
 
-        /// \brief Static function that creates a text field
-        [[maybe_unused]] static field_entry create(std::string name, text_field options) {
-            return field_entry(std::move(name), field_type(text_field(std::move(options))));
-        }
+        /**
+         * @brief Static function that creates a text field.
+         * @param name Field  name.
+         * @param options Text field options.
+         * @return A field_entry object.
+         */
+        [[maybe_unused]] static field_entry create(std::string name, text_field options);
 
-        /// \brief Static function that creates a numeric field
-        [[maybe_unused]] static field_entry create(std::string name, numeric_field options) {
-            return field_entry(std::move(name), field_type(numeric_field(options)));
-        }
+        /**
+         * @brief Static function that creates a numeric field.
+         * @param name Field  name.
+         * @param options Numeric field options.
+         * @return A field_entry object.
+         */
+        [[maybe_unused]] static field_entry create(std::string name, numeric_field options);
 
-        /// \brief Return true if the field is indexed
+        /**
+         * @brief Check if the field is indexed.
+         * @return True if the field is indexed, false otherwise.
+         */
         [[nodiscard]] [[maybe_unused]] constexpr bool is_indexed() const {
             // check at compile time if T is text_field
             if constexpr (std::is_same_v<T, text_field>) { // todo: try use _type.is_text()
@@ -161,7 +222,10 @@ namespace bridge::schema {
             return false;
         }
 
-        /// \brief Return true if the field is numeric fast
+        /**
+         * @brief Check if the field is numeric fast.
+         * @return True if the field is numeric fast, false otherwise.
+         */
         [[nodiscard]] [[maybe_unused]] constexpr bool is_numeric_fast() const {
             if constexpr  (std::is_same_v<T, numeric_field>){ // todo: try use _type.is_numeric()
                 // unsafe cast _type.get() to numeric_field
@@ -170,30 +234,34 @@ namespace bridge::schema {
             return false;
         }
 
-        //! \brief JSON Serialization
-        [[nodiscard]] serialization::json_t to_json() const {
-            return {
-                {"name", _name},
-                {"type", _type.to_json()}
-            };
-        }
+        /**
+         * @brief Converts a field entry to a JSON object.
+         * @return JSON object.
+         */
+        [[nodiscard]] serialization::json_t to_json() const;
 
-        //! \brief JSON Deserialization
-        [[maybe_unused]] static field_entry from_json(const serialization::json_t &json) {
-            return field_entry(json["name"], field_type<T>::from_json(json["type"]));
-        }
+        /**
+         * @brief Converts a JSON object to a field entry.
+         * @param json JSON object.
+         * @return A field entry.
+         */
+        [[maybe_unused]] static field_entry from_json(const serialization::json_t &json);
 
-        //! \brief Equality operator
-        [[nodiscard]] bool operator==(const field_entry &other) const {
-            return _name == other._name && _type == other._type;
-        }
+        /**
+         * @brief Equality operator.
+         * @param other Other field entry to compare with.
+         * @return True if the two field entries are equal, false otherwise.
+         */
+        [[nodiscard]] bool operator==(const field_entry &other) const;
 
-        //! \brief Inequality operator
-        [[nodiscard]] bool operator!=(const field_entry &other) const {
-            return _name != other._name || _type != other._type;
-        }
+        /**
+         * @brief Inequality operator.
+         * @param other Other field entry to compare with.
+         * @return True if the two field entries are not equal, false otherwise.
+         */
+        [[nodiscard]] bool operator!=(const field_entry &other) const;
 
-        // Avoid move semantics
+        //! < Avoid move semantics
         field_entry(field_entry &&) = delete;
         field_entry &operator=(field_entry &&) = delete;
 

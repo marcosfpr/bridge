@@ -25,9 +25,12 @@
 
 namespace bridge::schema {
 
+    /// @brief A identity type for  fields is a unsigned integer.
+    using id_t = unsigned char;
+
     /**
-     *  \brief A Field holds together an ID and its FieldValue.
-     *  \details It has the following properties:
+     *  @brief A Field holds together an ID and its FieldValue.
+     *  @details It has the following properties:
      * 1. Moveable
      * 2. Copyable
      * 3. Partial ordering
@@ -38,57 +41,105 @@ namespace bridge::schema {
     class field {
       public:
 
-        /// \brief Default constructor
+        /**
+         * @brief Default constructor.
+         */
         explicit field() = default;
 
+        /**
+         * Destructor.
+         */
+         virtual ~field() = default;
+
+        /**
+         * @brief Constructor.
+         * @param id The ID of the field.
+         * @param value The value of the field.
+         */
         explicit field(id_t id, V value) {
             this->id = id;
             this->value = field_value<V>::create(std::move(value));
         }
 
-        /// \brief Copy Constructor
+        /**
+         * @brief Copy constructor.
+         */
         field(const field &) = default;
 
-        /// \brief Move Constructor
+        /**
+         * @brief Move constructor.
+         */
         field(field && other)  noexcept {
             this->id = other.id;
             this->value = std::move(other.value);
         }
 
-        /// \brief Copy Assignment
+        /**
+         * @brief Copy assignment operator.
+         */
         field &operator=(const field &) = default;
 
-        /// \brief Move Assignment
+        /**
+         * @brief Move assignment operator.
+         */
         field &operator=(field &&)  noexcept = default;
 
-        /// \brief Equality
+        /**
+         * @brief Equality operator.
+         * @param other The other field.
+         * @return True if the fields are equal, false otherwise.
+         */
         template <FieldValue U>
         bool operator==(const field<U> &other) const { return id == other.get_id(); }
 
-        /// \brief Inequality
+        /**
+         * @brief Inequality operator.
+         * @param other The other field.
+         * @return True if the fields are not equal, false otherwise.
+         */
         template <FieldValue U>
         bool operator!=(const field<U> &other) const { return id != other.get_id(); }
 
-        /// \brief Three-way comparison
+        /**
+         * @brief Three-way comparison operator.
+         * @tparam U The other field type.
+         * @param other The other field object.
+         * @return Strong ordering between the fields. Allow to use the following operators: <, <=, >, >=.
+         */
         template <FieldValue U>
         std::strong_ordering operator<=>(const field<U> &other) const { return id <=> other.get_id(); }
 
-        /// \brief Get id
+        /**
+         * @brief Get the ID of the field.
+         * @return Field ID.
+         */
         [[nodiscard]] [[maybe_unused]] id_t get_id() const { return id; }
 
-        /// \brief Get value
+        /**
+         * @brief Get the value of the field.
+         * @return Field value.
+         */
         [[nodiscard]] [[maybe_unused]] field_value<V> get_value() const { return value; }
 
-        /// \brief Hashing function
+        /**
+         * @brief Hash the field.
+         * @return Hash value.
+         */
         [[nodiscard]] [[maybe_unused]] std::size_t hash() const { return std::hash<id_t>{}(id); }
 
 
-        /// \brief Serialization of field it's trivial
-        friend class boost::serialization::access;
+        /**
+         * @brief Serialize a field.
+         * @tparam Archive Archive type.
+         * @param ar Archive object.
+         * @param version Current version of the field.
+         */
         template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
             ar & id;
             ar & value;
         }
+
+        friend boost::serialization::access; //! Allow to access the private members of field.
 
       private:
         field_value<V> value;
