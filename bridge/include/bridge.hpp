@@ -26,5 +26,6 @@
 #include "directory.hpp"
 #include "global.hpp"
 #include "postings.hpp"
+#include "common/inmemory_buffer.hpp"
 
 #endif // BRIDGE_HPP_
