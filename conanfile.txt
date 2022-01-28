@@ -5,3 +5,6 @@ nlohmann_json/3.10.5
 
 [generators]
 cmake
+
+[options]
+boost:shared=True

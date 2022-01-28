@@ -1,7 +1,6 @@
 build
 cmake-build-debug
 bin
-.vscode
 .idea
 .ccls-cache
 

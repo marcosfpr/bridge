@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "name": "Linux GCC",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "~/.conan/data/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-gcc-x64"
+        },
+        {
+            "name": "Linux Clang",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "~/.conan/data/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}
