@@ -18,21 +18,38 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
-#ifndef SCHEMA_HPP_
-#define SCHEMA_HPP_
+#ifndef NAMED_FIELD_DOCUMENT_HPP_
+#define NAMED_FIELD_DOCUMENT_HPP_
 
-#include <memory>
 #include <string>
-#include <vector>
+#include <memory>
 
-#include "./options.hpp"
-#include "./field.hpp"
-#include "./field_entry.hpp"
-#include "./term.hpp"
-#include "./named_field_document.hpp"
+#include "common/serialization.hpp"
+#include "schema/field_value.hpp"
+
+#include "absl/container/btree_map.h"
 
 namespace bridge::schema {
 
-}; // namespace bridge::schema
+    // typedef std::unique_ptr<value> value_ptr; // todo: sounds bad;
+    // typedef absl::btree_map<std::string, value_ptr> field_map;
 
-#endif // SCHEMA_HPP_
+    // struct named_field_document {
+    //     field_map fmap;
+
+    //     friend class boost::serialization::access;
+    //     /**
+    //      * @brief Serialization of field value.
+    //      * @tparam Archive Archive type.
+    //      * @param ar Archive object.
+    //      * @param version Current version of the object.
+    //      */
+    //     template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
+            
+    //     }
+
+    // };
+
+}
+
+#endif

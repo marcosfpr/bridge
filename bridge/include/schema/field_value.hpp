@@ -40,7 +40,8 @@ namespace bridge::schema {
      * @brief Value represents the value of a any field. It is generic over all of the possible field types.
      *
      */
-    template <FieldValue V> class field_value {
+    template <FieldValue V>
+    class field_value : public value {
       public:
         /**
          * @brief Default constructor.
@@ -124,7 +125,6 @@ namespace bridge::schema {
       private:
         V _value;
     };
-
 
 } // namespace bridge::schema
 

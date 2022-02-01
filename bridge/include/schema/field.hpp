@@ -29,6 +29,12 @@ namespace bridge::schema {
     using id_t = unsigned char;
 
     /**
+     * @brief Convenience class to represent a bridge_field.
+     * 
+     */
+    class bridge_field {};
+
+    /**
      *  @brief A Field holds together an ID and its FieldValue.
      *  @details It has the following properties:
      * 1. Moveable
@@ -38,7 +44,7 @@ namespace bridge::schema {
      * 5. Hashable
      */
      template <FieldValue V>
-    class field {
+    class field : public bridge_field  {
       public:
 
         /**

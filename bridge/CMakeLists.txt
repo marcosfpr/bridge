@@ -7,6 +7,7 @@ set(
     SOURCES
     src/schema/options.cpp
     src/schema/field_entry.cpp
+    src/schema/term.cpp
 )
     
 add_library(

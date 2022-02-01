@@ -18,38 +18,58 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
-#include <span>
-
 #include <boost/container_hash/hash.hpp>
 
-#include "../../include/common/serialization.hpp"
-#include "../../include/schema/term.hpp"
+#include "common/serialization.hpp"
+#include "schema/term.hpp"
 #include "schema/options.hpp"
 
 namespace bridge::schema {
 
-    using mem::byte_t;
-    using mem::bytes_buffer;
-    using mem::bytes_container;
-    using mem::bytes_iterator;
-
     /**
      * @brief Default constructor.
      */
-    term::term() = default;
+    term::term() {
+        // Creates a new term with empty body and a field_id (1st byte) equal to -1.
+        // This is the default value for a term.
+        // The term is not valid.
+
+        this->data_.reserve(1);
+        id_t invalid_id = 0;
+        this->data_.push_back(static_cast<unsigned char>(invalid_id));
+    }
 
     /**
      * @brief Constructor.
      * @param data The data to be stored in the term.
      */
-    term::term(bytes_container data)
-        : _data(std::make_unique<bytes_buffer>(std::move(data))) {} // implicit conversion vector -> term_t
+    [[maybe_unused]] term::term(unsigned char *data) {
+        this->data_ = std::vector<unsigned char>(data, data + sizeof(data));
+    }
+
+    /**
+     * @brief Copy construct a new term object
+     *
+     * @param other Other term
+     */
+    term::term(const term &other) { this->data_ = other.data_; }
+
+    /**
+     * @brief Copy assignment operator.
+     *
+     * @param other Term to be copied.
+     * @return term& a new term.
+     */
+    term &term::operator=(const term &other) {
+        this->data_ = other.data_;
+        return *this;
+    }
 
     /**
      * Move  constructor.
      * @param other The term to be moved.
      */
-    term::term(term &&other) noexcept : _data(std::move(other._data)) {}
+    term::term(term &&other) noexcept { this->data_ = std::move(other.data_); }
 
     /**
      * @brief  Move assignment operator.
@@ -57,7 +77,7 @@ namespace bridge::schema {
      * @return The term.
      */
     term &term::operator=(term &&other) noexcept {
-        _data = std::move(other._data);
+        this->data_ = std::move(other.data_);
         return *this;
     }
 
@@ -66,7 +86,7 @@ namespace bridge::schema {
      * @param other The term to be compared.
      * @return True if the terms are equal, false otherwise.
      */
-    bool term::operator==(const term &other) const { return _data->bytes() == other._data->bytes(); }
+    bool term::operator==(const term &other) const { return data_ == other.data_; }
 
     /**
      * @brief Inequality operator.
@@ -80,23 +100,20 @@ namespace bridge::schema {
      * @param other The term to be compared.
      * @return Strong ordering of the terms.  Allow to use operators <, >, <=, >=.
      */
-    std::strong_ordering term::operator<=>(const term &other) const { return _data->bytes() <=> other._data->bytes(); }
+    std::strong_ordering term::operator<=>(const term &other) const {
+        // compare just the first byte that represents the field_id.
+        return data_[0] <=> other.data_[0];
+    }
 
     /**
      * @brief Overload output operator.
      */
     std::ostream &operator<<(std::ostream &os, const term &t) {
-
-        // string representation of the term.data() iterator comma separated
-        std::stringstream ss;
-        for (auto it = t.begin(); it != t.end(); ++it) {
-            if (it != t.begin()) {
-                ss << ",";
-            }
-            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*it);
+        os << "term(";
+        for (const auto &b : t.data_) {
+            os << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(b);
         }
-
-        os << "term(" << ss.str() << ")";
+        os << ")" << std::endl;
         return os;
     }
 
@@ -104,50 +121,34 @@ namespace bridge::schema {
      * @brief Hash function.
      * @return The hash value of the term.
      */
-    size_t term::hash() const {
-        boost::hash<vector<byte>> bytes_hash;
-        return bytes_hash(_data->bytes());
-    }
+    size_t term::hash() const { return boost::hash_value(data_); }
 
     /**
      * @brief Get the field id.
      * @return The field id.
      */
-    id_t term::get_field_id() const { return static_cast<id_t>(_data->bytes()[0]); }
-
-    /**
-     * @brief  Get the term data from an uint32_t.
-     * @return A new term with the data.
-     */
-    term term::from_uint32(id_t field_id, uint32_t data) {
-        bytes_container bytes(1 + 4);
-
-        bytes_buffer buffer(bytes.data(), bytes.size());
-
-        std::ostream os(&buffer);
-
-        serialization::marshall(os, field_id);
-        serialization::marshall(os, data);
-
-        return term(std::move(bytes));
-    }
-
-    /**
-     * @brief  Get the term data from an string
-     * @return A new term with the data.
-     */
-    static term from_string(const std::string &data);
-
-    /**
-     * @brief Get the term from a raw array of bytes.
-     * @return A new term with the data.
-     */
-    static term from_bytes(const byte *data, size_t size);
+    id_t term::get_field_id() const {
+        // first byte of std::string _data is the field id
+        return static_cast<id_t>(data_[0]);
+    };
 
     /**
      * @brief Get the bytes iterator of the term.
-     * @return The bytes slice.
+     * @return The bytes iterator.
      */
-    bytes_iterator data() const;
+    auto term::begin() const { return data_.begin(); }
+
+    /**
+     * @brief Get the end of term bytes iterator.
+     * @return The end bytes iterator
+     */
+    auto term::end() const { return data_.end(); }
+
+    /**
+     * @brief Get the raw bytes of the term.
+     *
+     * @return const char* Raw bytes of the term.
+     */
+    const unsigned char *term::as_ref() const { return data_.data(); }
 
 } // namespace bridge::schema

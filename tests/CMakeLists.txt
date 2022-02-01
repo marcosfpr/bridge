@@ -8,7 +8,9 @@ add_executable(
   main.cpp
   unit/analyzer_test.cpp
   unit/schema_options_test.cpp
-        unit/field_test.cpp)
+  unit/field_test.cpp
+  unit/term_test.cpp
+)
 
 # add_executable(
 #         func_test_bridge
