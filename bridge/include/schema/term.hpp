@@ -119,6 +119,39 @@ namespace bridge::schema {
         id_t get_field_id() const;
 
         /**
+         * @brief Get the term data from an uint16_t
+         * @return A new term with the data.
+         */
+        static term from_uint8(id_t field_id, uint8_t data) {
+            //  serialize id_t and uint8_t as a std::vector
+            // first position is the field id
+            // the rest is the uint32_t data (4 bytes)
+            std::vector<unsigned char> bytes;
+            bytes.reserve(sizeof(id_t) + sizeof(uint8_t));
+
+            bytes.push_back(static_cast<unsigned char>(field_id));
+            bytes.push_back(static_cast<unsigned char>(data));
+
+            return term(bytes.data());
+        }
+
+        /**
+         * @brief Get the term data from an uint16_t
+         * @return A new term with the data.
+         */
+        static term from_uint16(id_t field_id, uint16_t data) {
+            //  serialize id_t and uint16_t as a std::vector
+            // first position is the field id
+            // the rest is the uint32_t data (4 bytes)
+            std::vector<unsigned char> bytes;
+            bytes.reserve(sizeof(id_t) + sizeof(uint16_t));
+            bytes.push_back(static_cast<unsigned char>(field_id));
+            bytes.push_back(static_cast<unsigned char>(data >> 8));
+            bytes.push_back(static_cast<unsigned char>(data));
+            return term(bytes.data());
+        }
+
+        /**
          * @brief  Get the term data from an uint32_t.
          * @return A new term with the data.
          */
@@ -130,19 +163,36 @@ namespace bridge::schema {
             std::vector<unsigned char> bytes;
 
             bytes.reserve(sizeof(id_t) + sizeof(uint32_t)); // reserve space for the field id and the data
-
             bytes.push_back(static_cast<unsigned char>(field_id)); // push the field id
-
             bytes.push_back(static_cast<unsigned char>(data >> 24)); // push the first byte of the data
-
             bytes.push_back(static_cast<unsigned char>(data >> 16)); // push the second byte of the data
-
             bytes.push_back(static_cast<unsigned char>(data >> 8)); // push the third byte of the data
-
             bytes.push_back(static_cast<unsigned char>(data)); // push the fourth byte of the data
 
             return term(bytes.data());
         }
+
+        /**
+         * @brief  Get the term data from an uint64_t.
+         * @return A new term with the data.
+         */
+        static term from_uint64(id_t field_id, u_int64_t data) {
+            std::vector<unsigned char> bytes;
+
+            bytes.reserve(sizeof(id_t) + sizeof(uint64_t)); // reserve space for the field id and the data
+            bytes.push_back(static_cast<unsigned char>(field_id)); // push the field id
+            bytes.push_back(static_cast<unsigned char>(data >> 56)); // push the first byte of the data
+            bytes.push_back(static_cast<unsigned char>(data >> 48)); // push the second byte of the data
+            bytes.push_back(static_cast<unsigned char>(data >> 40)); // push the third byte of the data
+            bytes.push_back(static_cast<unsigned char>(data >> 32)); // push the fourth byte of the data
+            bytes.push_back(static_cast<unsigned char>(data >> 24)); // push the fifth byte of the data
+            bytes.push_back(static_cast<unsigned char>(data >> 16)); // push the sixth byte of the data
+            bytes.push_back(static_cast<unsigned char>(data >> 8)); // push the seventh byte of the data
+            bytes.push_back(static_cast<unsigned char>(data)); // push the eighth byte of the data
+
+            return term(bytes.data());
+        }
+
 
         /**
          * @brief  Get the term data from an string

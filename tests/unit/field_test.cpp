@@ -13,7 +13,7 @@ TEST(FieldTest, FieldType) {
     // Field type: stores information about fields.
     bridge::schema::field_type ft1 = bridge::schema::field_type(bridge::schema::TEXT); // constructor
 
-    bridge::schema::field_type<bridge::schema::text_field> ft2; // default constructor
+    bridge::schema::field_type<bridge::schema::text_field_option> ft2; // default constructor
 
     EXPECT_EQ(ft1.is_text(), ft2.is_text());
     EXPECT_EQ(ft1.is_text(), true);
@@ -36,7 +36,7 @@ TEST(FieldTest, FieldType) {
     EXPECT_EQ(bridge::schema::TEXT, ft3.get());
 
     // Numeric field
-    bridge::schema::field_type<bridge::schema::numeric_field> ft5;
+    bridge::schema::field_type<bridge::schema::numeric_field_option> ft5;
     EXPECT_EQ(ft5.is_numeric(), true);
     EXPECT_EQ(ft5.is_text(), false);
     EXPECT_EQ(ft5.get().is_fast(), false);
@@ -59,12 +59,12 @@ TEST(FieldTest, FieldEntry) {
         EXPECT_EQ(fe1.name(), fe2.name());
         EXPECT_EQ(fe3.type(), fe2.type());
 
-        auto fe4 = field_entry<text_field>::create("title", TEXT);
+        auto fe4 = field_entry<text_field_option>::create("title", TEXT);
 
         EXPECT_EQ(fe1.name(), fe4.name());
         EXPECT_NE(fe1.type(), fe4.type());
 
-        auto fe5 = field_entry<text_field>::create("title", STORED);
+        auto fe5 = field_entry<text_field_option>::create("title", STORED);
 
         EXPECT_EQ(fe1.is_indexed(), true);
         EXPECT_EQ(fe5.is_indexed(), false);
@@ -85,13 +85,8 @@ TEST(FieldTest, FieldEntry) {
         {
             // deserialize from json
             bridge::serialization::JSONSerializable auto from_json_entry =
-                bridge::serialization::unmarshall_json<field_entry<text_field>>(ifs);
+                bridge::serialization::unmarshall_json<field_entry<text_field_option>>(ifs);
             ASSERT_EQ(from_json_entry, fe1);
-
-            // print all file  buffer
-            std::stringstream ss;
-            ss << ifs.rdbuf();
-            std::cout << ss.str() << std::endl;
         }
         // close and remove temporary json file
         ifs.close();
@@ -101,7 +96,7 @@ TEST(FieldTest, FieldEntry) {
     // Numeric fields
     {
         field_entry fe1 = field_entry("revenue", field_type(NUMERIC));
-        field_entry fe3 = field_entry<numeric_field>::create(fe1.name(), FAST);
+        field_entry fe3 = field_entry<numeric_field_option>::create(fe1.name(), FAST);
 
         EXPECT_EQ(fe1.is_indexed(), false);
         EXPECT_EQ(fe1.is_numeric_fast(), false);
@@ -199,7 +194,7 @@ TEST(FieldTest, FieldMarshall) {
         ASSERT_EQ(f2.get_value().value(), deserialized_str_option.get_value().value());
 
         // wrong deserialization
-        ASSERT_ANY_THROW(unmarshall<bridge::schema::text_field>(tmp_file));
+        ASSERT_ANY_THROW(unmarshall<bridge::schema::text_field_option>(tmp_file));
     }
 
     tmp_file.close();

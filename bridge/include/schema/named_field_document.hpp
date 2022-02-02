@@ -22,7 +22,9 @@
 #define NAMED_FIELD_DOCUMENT_HPP_
 
 #include <string>
+#include <vector>
 #include <memory>
+#include <variant>
 
 #include "common/serialization.hpp"
 #include "schema/field_value.hpp"
@@ -31,24 +33,86 @@
 
 namespace bridge::schema {
 
-    // typedef std::unique_ptr<value> value_ptr; // todo: sounds bad;
-    // typedef absl::btree_map<std::string, value_ptr> field_map;
+    using field_map = absl::btree_map<std::string, std::vector<field_value_v>>;
 
-    // struct named_field_document {
-    //     field_map fmap;
+    struct named_field_document {
+        field_map fmap;
 
-    //     friend class boost::serialization::access;
-    //     /**
-    //      * @brief Serialization of field value.
-    //      * @tparam Archive Archive type.
-    //      * @param ar Archive object.
-    //      * @param version Current version of the object.
-    //      */
-    //     template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
+        /**
+         * @brief Construct a new named field document object
+         * 
+         */
+        named_field_document() = default;
+
+        /**
+         * @brief Construct a new named field document object
+         * 
+         * @param fmap 
+         */
+        named_field_document(field_map&& fmap) : fmap(std::move(fmap)) {}
+
+        /**
+         * @brief Destroy the named field document object
+         * 
+         */
+        ~named_field_document() = default;
+
+        /**
+         * @brief Converts a named_field_document type to a JSON.
+         * @return A JSON object.
+         */
+        [[nodiscard]] serialization::json_t to_json() const {
+            serialization::json_t inner_json;
             
-    //     }
+            for (const auto &[key, value] : fmap) {
+                serialization::json_t values_json;
+                for (const auto &v : value) {
+                    if (std::holds_alternative<string_value>(v)) {
+                        string_value sv = std::get<string_value>(v);
+                        values_json.push_back(*sv);
+                    }
+                    else if (std::holds_alternative<uint32_value>(v)) {
+                        uint32_value nv = std::get<uint32_value>(v);
+                        values_json.push_back(*nv);
+                    }
+                }
+                inner_json[key] = values_json;
+            }
 
-    // };
+            serialization::json_t json;
+            json["named_field_document"] = inner_json;
+            return json;
+        }
+
+
+        /**
+         * @brief Converts a JSON to a named_field_document type.
+         * @param json JSON object.
+         * @return named_field_document object.
+         */
+        [[maybe_unused]] static named_field_document from_json(const serialization::json_t &json) {
+
+            named_field_document nfd;
+            serialization::json_t inner_json = json["named_field_document"];
+            for (auto& [key, values_json] : inner_json.items()) {
+                std::vector<field_value_v> values;
+                for (auto &value : values_json) {
+
+                    if (value.is_string()) {
+                        values.push_back(string_value(value.get<std::string>()));
+                    }
+                    else if (value.is_number()) {
+                        values.push_back(uint32_value(value.get<uint32_t>()));
+                    }
+                }
+                nfd.fmap[key] = values;
+            }
+
+            return nfd;
+
+        }
+    };
+
 
 }
 

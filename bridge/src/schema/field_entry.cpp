@@ -146,8 +146,8 @@ namespace bridge::schema {
      * @return A field_entry object.
      */
     template <>
-    [[maybe_unused]] field_entry<text_field> field_entry<text_field>::create(std::string name, text_field options) {
-        return field_entry(std::move(name), field_type(text_field(std::move(options))));
+    [[maybe_unused]] field_entry<text_field_option> field_entry<text_field_option>::create(std::string name, text_field_option options) {
+        return field_entry(std::move(name), field_type(text_field_option(std::move(options))));
     }
 
     /**
@@ -157,8 +157,8 @@ namespace bridge::schema {
      * @return A field_entry object.
      */
     template <>
-    [[maybe_unused]] field_entry<numeric_field> field_entry<numeric_field>::create(std::string name, numeric_field options) {
-        return field_entry(std::move(name), field_type(numeric_field(std::move(options))));
+    [[maybe_unused]] field_entry<numeric_field_option> field_entry<numeric_field_option>::create(std::string name, numeric_field_option options) {
+        return field_entry(std::move(name), field_type(numeric_field_option(std::move(options))));
     }
 
     /**
@@ -200,10 +200,10 @@ namespace bridge::schema {
     // --------------------------------------------------------------------------------------------- //
     // ------------------------------- Explicit template instantiations  --------------------------- //
 
-    template class field_type<text_field>;
-    template class field_type<numeric_field>;
+    template class field_type<text_field_option>;
+    template class field_type<numeric_field_option>;
 
-    template class field_entry<text_field>;
-    template class field_entry<numeric_field>;
+    template class field_entry<text_field_option>;
+    template class field_entry<numeric_field_option>;
 
 } // namespace bridge::schema

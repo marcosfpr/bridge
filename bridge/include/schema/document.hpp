@@ -21,81 +21,80 @@
 #ifndef BRIDGE_DOCUMENT_HPP_
 #define BRIDGE_DOCUMENT_HPP_
 
-#include <vector>
 #include <memory>
+#include <variant>
+#include <vector>
 
+#include "../error.hpp"
 #include "./field.hpp"
 
 namespace bridge::schema {
 
-    typedef std::unique_ptr<bridge_field> field_ptr;
-    typedef std::vector<field_ptr>::iterator field_iterator;
+    typedef std::vector<field_v>::iterator field_iterator;
 
     /**
      * @brief Bridge's document is the object that can be indexed and searched for.
      * @details Documents are really fundamentally a collection of unordered tuple (field, value).
      *         In this list, one field may appear more than once.
-     * 
+     *
      */
-
     class document {
-    public:
-
+      public:
         /**
          * @brief Construct a new document object
-         * 
+         *
          */
         explicit document();
 
         /**
          * @brief Construct a new document object
-         * 
+         *
          * @param fields Field-Value tuples of any kind.
          */
-        document(std::vector<field_ptr>&& fields);
+        document(std::vector<field_v> &&fields);
 
         /**
          * @brief Destroy the document and all its fields
-         * 
+         *
          */
         virtual ~document();
 
         /**
          * @brief Equality operator
-         * 
+         *
          * @param other Other document
          * @return true If the documents are equal
          * @return false Otherwise
          */
-        bool operator==(const document& other) const;
+        bool operator==(const document &other) const;
 
         /**
          * @brief Inequality operator
-         * 
+         *
          * @param other Other document
          * @return true If the documents are not equal
          * @return false Otherwise
          */
-        bool operator!=(const document& other) const;
+        bool operator!=(const document &other) const;
 
         /**
          * @brief Returns the number of fields in the document
-         * 
+         *
          * @return size_t The number of fields
          */
         size_t len() const;
 
         /**
          * @brief Adds a field to the document
-         * 
+         *
          * @param field_id Field ID
          * @param value String value
          */
-        void add_text(id_t field_id, const std::string& value);
+        void add_text(id_t field_id, const std::string &value);
 
         /**
          * @brief Adds a field to the document
-         * 
+         *
          * @param field_id Field ID
          * @param value uint32_t value
          */
@@ -103,56 +102,72 @@ namespace bridge::schema {
 
         /**
          * @brief Add a field to the document
-         * 
+         *
          * @tparam V Type of the value.
          * @param field Field  of type V.
          */
-        template <FieldValue V>
-        void add(field<V> field);
+        template <FieldValue V> void add(field<V> field);
 
         /**
          * @brief Get the fields iterator.
-         * 
+         *
          * @return field_iterator Iterator over document's fields.
          */
         field_iterator get_fields();
 
         /**
          * @brief Get the sorted fields iterator.
-         * 
+         *
          * @return field_iterator Iterator over document's fields.
          */
         field_iterator get_sorted_fields();
 
         /**
          * @brief Get all fields given a field_id.
-         * 
+         *
          * @param field_id Field id.
          * @return field_iterator Iterator over document's fields.
          */
         field_iterator get_all_by_id(id_t field_id);
 
         /**
-         * @brief Get the first field given a field_id.
-         * 
-         * @param field_id Field id.
-         * @return field_iterator 
+         * @brief Unwrap field_value  given a field of U.
+         *
+         * @tparam U Expected field Value.
          */
-        field_ptr get_first_by_id(id_t field_id);
+        template <FieldValue U> static field<U> get_field_value(field_v f) {
+            if (std::holds_alternative<field<U>>(f)) {
+                return std::get<field<U>>(f);
+            }
+            throw bridge_error("The field does not holds the corresponding value  type.");
+        }
 
+        template <FieldValue U> static bool holds_type(field_v f) {
+            return std::holds_alternative<field<U>>(f);
+        }
+    protected:
 
-
-    private:
-
+        /**
+         * @brief Unwrap field_value.
+         */
+        static id_t unwrap_field_id(field_v f) {
+            // unwrap variant
+            if (std::holds_alternative<field<std::string>>(f)) {
+                return std::get<field<std::string>>(f).get_id();
+            } else if (std::holds_alternative<field<uint32_t>>(f)) {
+                return std::get<field<uint32_t>>(f).get_id();
+            } 
+            throw bridge_error("The field does not holds any valid value types.");
+        }
+      private:
         /**
          * @brief A document is represented as a vector of field unique pointers.
          * @todo Possibly it has a better way to represent this  polymorphic structure
-         * rather than create an empty base class lol.
+         * rather than create two different vectors lol.
          */
-        std::vector<field_ptr> _fields;
-
+        std::vector<field_v> fields_;
     };
 
-}
+} // namespace bridge::schema
 
 #endif

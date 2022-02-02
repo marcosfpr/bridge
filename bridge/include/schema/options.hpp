@@ -231,17 +231,17 @@ namespace bridge::schema {
      * - Moveable
      * - Partial ordering
      */
-    struct text_field {
+    struct text_field_option {
 
         /**
          * @brief Default constructor.
          */
-        text_field();
+        text_field_option();
 
         /**
          * @brief Destructor
          */
-        virtual ~text_field();
+        virtual ~text_field_option();
 
         /**
          * @brief Constructor.
@@ -249,7 +249,7 @@ namespace bridge::schema {
          * @param index_option_value Indexing option value.
          * @param stored True if the field is stored, false otherwise.
          */
-        text_field(text_indexing_option::Value index_option_value, bool stored);
+        text_field_option(text_indexing_option::Value index_option_value, bool stored);
 
         /**
          * @brief Constructor.
@@ -257,14 +257,14 @@ namespace bridge::schema {
          * @param indexing_options Indexing option.
          * @param stored True if the field is stored, false otherwise.
          */
-        text_field(text_indexing_option indexing_options, bool stored);
+        text_field_option(text_indexing_option indexing_options, bool stored);
 
         /**
          * @brief Copy constructor.
          *
          * @param other Other text_field to be copied.
          */
-        text_field(const text_field &other);
+        text_field_option(const text_field_option &other);
 
         /**
          * @brief Copy assignment operator.
@@ -272,14 +272,14 @@ namespace bridge::schema {
          * @param other Other text_field to be copied.
          * @return A new text_field.
          */
-        text_field &operator=(const text_field &other);
+        text_field_option &operator=(const text_field_option &other);
 
         /**
          * @brief  Move constructor.
          *
          * @param other Other text_field to be moved.
          */
-        text_field(text_field &&other) noexcept;
+        text_field_option(text_field_option &&other) noexcept;
 
         /**
          * @briief Move assignment operator.
@@ -287,7 +287,7 @@ namespace bridge::schema {
          * @param other Other text_field to be moved.
          * @return A new text_field.
          */
-        text_field &operator=(text_field &&other) noexcept;
+        text_field_option &operator=(text_field_option &&other) noexcept;
 
         /**
          * @brief Equality operator.
@@ -295,7 +295,7 @@ namespace bridge::schema {
          * @param other Other text_field to be compared.
          * @return True if the two text_field are equal, false otherwise.
          */
-        bool operator==(const text_field &other) const;
+        bool operator==(const text_field_option &other) const;
 
         /**
          * @brief Inequality operator.
@@ -303,7 +303,7 @@ namespace bridge::schema {
          * @param other Other text_field to be compared.
          * @return True if the two text_field are not equal, false otherwise.
          */
-        bool operator!=(const text_field &other) const;
+        bool operator!=(const text_field_option &other) const;
 
         /**
          * @brief Three-way operator.
@@ -311,7 +311,7 @@ namespace bridge::schema {
          * @param other Other text_field to be compared.
          * @return Strong ordering of the two text_field (Allow to use <, <=, >, >=).
          */
-        std::strong_ordering operator<=>(const text_field &other) const;
+        std::strong_ordering operator<=>(const text_field_option &other) const;
 
         /**
          * @brief Get the indexing_options.
@@ -347,7 +347,7 @@ namespace bridge::schema {
          * @param other Other text_field to be combined.
          * @return A new text_field from the combination of the two text_field.
          */
-        text_field operator|(const text_field &other) const;
+        text_field_option operator|(const text_field_option &other) const;
 
         /**
          * @brief Serialize a text_field.
@@ -373,7 +373,7 @@ namespace bridge::schema {
          * @param json A JSON object.
          * @return A text_field.
          */
-        [[maybe_unused]] static text_field from_json(const serialization::json_t &json);
+        [[maybe_unused]] static text_field_option from_json(const serialization::json_t &json);
 
         /**
          * @brief Returns a string representation of the text_field.
@@ -399,17 +399,17 @@ namespace bridge::schema {
      * - Moveable
      * - Partial ordering
      */
-    struct numeric_field {
+    struct numeric_field_option {
 
         /**
          * @brief Default constructor.
          */
-        numeric_field();
+        numeric_field_option();
 
         /**
          * @brief Destructor
          */
-        virtual ~numeric_field();
+        virtual ~numeric_field_option();
 
         /**
          * @brief Constructor.
@@ -417,45 +417,45 @@ namespace bridge::schema {
          * @param fast True if the field is fast.
          * @param stored True if the field is stored.
          */
-        numeric_field(bool indexed, bool fast, bool stored);
+        numeric_field_option(bool indexed, bool fast, bool stored);
 
         /**
          * @brief Copy constructor.
          * @param other Other numeric_field to be copied.
          */
-        numeric_field(const numeric_field &other);
+        numeric_field_option(const numeric_field_option &other);
 
         /**
          * @brief Copy assignment operator.
          * @param other Other numeric_field to be copied.
          */
-        numeric_field &operator=(const numeric_field &other);
+        numeric_field_option &operator=(const numeric_field_option &other);
 
         /**
          * @brief Move constructor.
          * @param other Other numeric_field to be moved.
          */
-        numeric_field(numeric_field &&other) noexcept;
+        numeric_field_option(numeric_field_option &&other) noexcept;
 
         /**
          * @brief Move assignment operator.
          * @param other Other numeric_field to be moved.
          */
-        numeric_field &operator=(numeric_field &&other) noexcept;
+        numeric_field_option &operator=(numeric_field_option &&other) noexcept;
 
         /**
          * @brief Equality operator.
          * @param other Other numeric_field to be compared.
          * @return True if the two numeric_field are equal.
          */
-        bool operator==(const numeric_field &other) const;
+        bool operator==(const numeric_field_option &other) const;
 
         /**
          * @brief Inequality operator.
          * @param other Other numeric_field to be compared.
          * @return True if the two numeric_field are not equal.
          */
-        bool operator!=(const numeric_field &other) const;
+        bool operator!=(const numeric_field_option &other) const;
 
         /**
          * @brief Check if the numeric field is indexed.
@@ -517,7 +517,7 @@ namespace bridge::schema {
          * @brief Convert the numeric_field from a JSON
          * @param numeric_field_json JSON representation of the numeric_field.
          */
-        [[maybe_unused]] static numeric_field from_json(const serialization::json_t &json);
+        [[maybe_unused]] static numeric_field_option from_json(const serialization::json_t &json);
 
         /**
          * @brief Get the numeric_field as a string.
@@ -530,23 +530,23 @@ namespace bridge::schema {
     };
 
     /// @brief STRING text_field is untokenized and indexed
-    static const text_field STRING = // NOLINT(cert-err58-cpp)
-        text_field(text_indexing_option::Untokenized, false);
+    static const text_field_option STRING = // NOLINT(cert-err58-cpp)
+        text_field_option(text_indexing_option::Untokenized, false);
 
     /// @brief TEXT text_field is tokenized and indexed
-    static const text_field TEXT = // NOLINT(cert-err58-cpp)
-        text_field(text_indexing_option::TokenizedWithFreqAndPosition, false);
+    static const text_field_option TEXT = // NOLINT(cert-err58-cpp)
+        text_field_option(text_indexing_option::TokenizedWithFreqAndPosition, false);
 
     /// @brief STORED text_field is only stored. Thus, it is useful just for query results.
     /// @details Reading the stored fields of a document is relatively slow.
-    static const text_field STORED = // NOLINT(cert-err58-cpp)
-        text_field(text_indexing_option::Unindexed, true);
+    static const text_field_option STORED = // NOLINT(cert-err58-cpp)
+        text_field_option(text_indexing_option::Unindexed, true);
 
     /// @brief FAST numeric_field is fast.
-    static const numeric_field FAST = numeric_field(false, true, false);
+    static const numeric_field_option FAST = numeric_field_option(false, true, false);
 
     /// @brief INDEXED numeric_field is not fast.
-    static const numeric_field NUMERIC = numeric_field(false, false, false);
+    static const numeric_field_option NUMERIC = numeric_field_option(false, false, false);
 
 } // namespace bridge::schema
 

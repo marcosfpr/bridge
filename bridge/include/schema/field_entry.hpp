@@ -20,9 +20,11 @@
 
 /// \brief [C++] FieldEntry class
 
-#include "./options.hpp"
 #include <concepts>
 #include <utility>
+#include <variant>
+
+#include "./options.hpp"
 
 #ifndef BRIDGE_FIELD_ENTRY_HPP_
 #define BRIDGE_FIELD_ENTRY_HPP_
@@ -46,7 +48,7 @@ namespace bridge::schema {
 
     /// @brief Concept that defines a FieldType based on  the two possible types of fields: text and numeric.
     template <typename T>
-    concept FieldType = (std::is_same_v<T, text_field> || std::is_same_v<T, numeric_field>) && HasName<T>;
+    concept FieldType = (std::is_same_v<T, text_field_option> || std::is_same_v<T, numeric_field_option>) && HasName<T>;
 
 
     /**
@@ -110,7 +112,7 @@ namespace bridge::schema {
          */
         [[nodiscard]] constexpr bool is_text() const {
             // check if generic T is of type: text_field
-            return std::is_same_v<T, text_field>;
+            return std::is_same_v<T, text_field_option>;
         }
 
         /**
@@ -119,7 +121,7 @@ namespace bridge::schema {
          */
         [[nodiscard]] constexpr bool is_numeric() const {
             // check if generic T is of type: numeric_field
-            return std::is_same_v<T, numeric_field>;
+            return std::is_same_v<T, numeric_field_option>;
         }
 
         /**
@@ -199,7 +201,7 @@ namespace bridge::schema {
          * @param options Text field options.
          * @return A field_entry object.
          */
-        [[maybe_unused]] static field_entry create(std::string name, text_field options);
+        [[maybe_unused]] static field_entry create(std::string name, text_field_option options);
 
         /**
          * @brief Static function that creates a numeric field.
@@ -207,7 +209,7 @@ namespace bridge::schema {
          * @param options Numeric field options.
          * @return A field_entry object.
          */
-        [[maybe_unused]] static field_entry create(std::string name, numeric_field options);
+        [[maybe_unused]] static field_entry create(std::string name, numeric_field_option options);
 
         /**
          * @brief Check if the field is indexed.
@@ -215,9 +217,9 @@ namespace bridge::schema {
          */
         [[nodiscard]] [[maybe_unused]] constexpr bool is_indexed() const {
             // check at compile time if T is text_field
-            if constexpr (std::is_same_v<T, text_field>) { // todo: try use _type.is_text()
+            if constexpr (std::is_same_v<T, text_field_option>) { // todo: try use _type.is_text()
                 // unsafe cast _type.get() to text_field
-                return static_cast<text_field>(_type.get()).get_indexing_options().is_indexed();
+                return static_cast<text_field_option>(_type.get()).get_indexing_options().is_indexed();
             }
             return false;
         }
@@ -227,9 +229,9 @@ namespace bridge::schema {
          * @return True if the field is numeric fast, false otherwise.
          */
         [[nodiscard]] [[maybe_unused]] constexpr bool is_numeric_fast() const {
-            if constexpr  (std::is_same_v<T, numeric_field>){ // todo: try use _type.is_numeric()
+            if constexpr  (std::is_same_v<T, numeric_field_option>){ // todo: try use _type.is_numeric()
                 // unsafe cast _type.get() to numeric_field
-                return static_cast<numeric_field>(_type.get()).is_fast();
+                return static_cast<numeric_field_option>(_type.get()).is_fast();
             }
             return false;
         }
@@ -269,6 +271,12 @@ namespace bridge::schema {
         const std::string _name;
         const field_type<T> _type;
     };
+
+    /**
+     * @brief A field entry is a variant of either a text field or a numeric field.
+     */
+    using field_entry_v = std::variant<field_entry<text_field_option>, field_entry<numeric_field_option>>;
+
 
 } // namespace bridge::schema
 

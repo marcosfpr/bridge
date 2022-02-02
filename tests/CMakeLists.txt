@@ -10,6 +10,8 @@ add_executable(
   unit/schema_options_test.cpp
   unit/field_test.cpp
   unit/term_test.cpp
+  unit/document_test.cpp
+  unit/named_field_document_test.cpp
 )
 
 # add_executable(

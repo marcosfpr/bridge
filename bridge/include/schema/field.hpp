@@ -21,18 +21,15 @@
 #ifndef BRIDGE_FIELD_HPP_
 #define BRIDGE_FIELD_HPP_
 
+#include <string>
+#include <variant>
+
 #include "./field_value.hpp"
 
 namespace bridge::schema {
 
     /// @brief A identity type for  fields is a unsigned integer.
     using id_t = unsigned char;
-
-    /**
-     * @brief Convenience class to represent a bridge_field.
-     * 
-     */
-    class bridge_field {};
 
     /**
      *  @brief A Field holds together an ID and its FieldValue.
@@ -43,8 +40,8 @@ namespace bridge::schema {
      * 4. Equality
      * 5. Hashable
      */
-     template <FieldValue V>
-    class field : public bridge_field  {
+    template <FieldValue V>
+    class field {
       public:
 
         /**
@@ -95,16 +92,16 @@ namespace bridge::schema {
          * @param other The other field.
          * @return True if the fields are equal, false otherwise.
          */
-        template <FieldValue U>
-        bool operator==(const field<U> &other) const { return id == other.get_id(); }
+        template<FieldValue  U>
+        bool operator==(const field<U> &other) const { return this->get_id() == other.get_id(); }
 
         /**
          * @brief Inequality operator.
          * @param other The other field.
          * @return True if the fields are not equal, false otherwise.
          */
-        template <FieldValue U>
-        bool operator!=(const field<U> &other) const { return id != other.get_id(); }
+        template<FieldValue  U>
+        bool operator!=(const field<U> &other) const { return this->get_id() != other.get_id(); }
 
         /**
          * @brief Three-way comparison operator.
@@ -112,8 +109,8 @@ namespace bridge::schema {
          * @param other The other field object.
          * @return Strong ordering between the fields. Allow to use the following operators: <, <=, >, >=.
          */
-        template <FieldValue U>
-        std::strong_ordering operator<=>(const field<U> &other) const { return id <=> other.get_id(); }
+        template<FieldValue  U>
+        std::strong_ordering operator<=>(const field<U> &other) const { return this->get_id() <=> other.get_id(); }
 
         /**
          * @brief Get the ID of the field.
@@ -125,16 +122,11 @@ namespace bridge::schema {
          * @brief Get the value of the field.
          * @return Field value.
          */
-        [[nodiscard]] [[maybe_unused]] field_value<V> get_value() const { return value; }
+        [[nodiscard]] [[maybe_unused]] field_value<V> get_value() const {
+            return value;
+        }
 
-        /**
-         * @brief Hash the field.
-         * @return Hash value.
-         */
-        [[nodiscard]] [[maybe_unused]] std::size_t hash() const { return std::hash<id_t>{}(id); }
-
-
-        /**
+         /**
          * @brief Serialize a field.
          * @tparam Archive Archive type.
          * @param ar Archive object.
@@ -144,13 +136,26 @@ namespace bridge::schema {
             ar & id;
             ar & value;
         }
+        friend boost::serialization::access; //! Allow to access the private members of field.            
 
-        friend boost::serialization::access; //! Allow to access the private members of field.
+        /**
+         * @brief Hash the field.
+         * @return Hash value.
+         */
+        [[nodiscard]] [[maybe_unused]] std::size_t hash() const { return std::hash<id_t>{}(id); }
 
       private:
         field_value<V> value;
         id_t id{};
     };
+
+
+    /**
+     * @brief In the Bridge project, documents are represented as a collection of fields.
+     * @details For this first version, we will only support a two variants of field types: string and integer.
+     * @todo It must change in the future lol.
+     */
+    typedef std::variant<field<std::string>, field<uint32_t>> field_v;
 
 } // namespace bridge::schema
 

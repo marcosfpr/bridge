@@ -25,23 +25,25 @@
 
 #include <concepts>
 #include <string>
+#include <variant>
 
 #include "../common/serialization.hpp"
 
 namespace bridge::schema {
 
-    // todo: define better with good constraints.
-
     /// @brief  Concept of a field value: a field value is a string or numeric value and must be serializable.
     template <typename T>
     concept FieldValue = (std::is_same_v<T, std::string> || std::unsigned_integral<T>) && serialization::Serializable<T>;
 
+    /// @brief Default values for this 1st version of bridge are string and uint32_t.
+    using value_type = std::variant<std::string, uint32_t>;
+    
     /**
      * @brief Value represents the value of a any field. It is generic over all of the possible field types.
      *
      */
     template <FieldValue V>
-    class field_value : public value {
+    class field_value {
       public:
         /**
          * @brief Default constructor.
@@ -125,6 +127,11 @@ namespace bridge::schema {
       private:
         V _value;
     };
+
+    /// @brief Field values defined over the default types.
+    using string_value = field_value<std::string>;
+    using uint32_value = field_value<uint32_t>;
+    using field_value_v = std::variant<string_value, uint32_value>; //!< Type of field value.
 
 } // namespace bridge::schema
 
