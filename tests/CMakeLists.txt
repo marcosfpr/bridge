@@ -12,6 +12,7 @@ add_executable(
   unit/term_test.cpp
   unit/document_test.cpp
   unit/named_field_document_test.cpp
+  unit/schema_test.cpp
 )
 
 # add_executable(

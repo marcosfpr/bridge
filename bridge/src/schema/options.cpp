@@ -73,12 +73,10 @@ namespace bridge::schema {
      * @return A new text_indexing_option with the combined values.
      */
     text_indexing_option text_indexing_option::operator|(const text_indexing_option &other) const {
-        // if this == unidexed, return other
+        // if this == unindexed, return other
         if (_index_options == Unindexed) {
             return other;
-        } else if (other._index_options == Unindexed) {
-            return *this;
-        } else if (_index_options == other._index_options) {
+        } else if (other._index_options == Unindexed || _index_options == other._index_options) {
             return *this;
         } else {
             throw bridge_error("Cannot combine indexing options");
@@ -334,7 +332,8 @@ namespace bridge::schema {
      * @param fast True if the field is fast.
      * @param stored True if the field is stored.
      */
-    numeric_field_option::numeric_field_option(bool indexed, bool fast, bool stored) : indexed(indexed), fast(fast), stored(stored) {}
+    numeric_field_option::numeric_field_option(bool indexed, bool fast, bool stored) noexcept
+        : indexed(indexed), fast(fast), stored(stored) {}
 
     /**
      * @brief Copy constructor.
@@ -370,13 +369,11 @@ namespace bridge::schema {
     }
 
     /**
-         * @brief Inequality operator.
-         * @param other Other numeric_field to be compared.
-         * @return True if the two numeric_field are not equal.
+     * @brief Inequality operator.
+     * @param other Other numeric_field to be compared.
+     * @return True if the two numeric_field are not equal.
      */
-    bool numeric_field_option::operator!=(const numeric_field_option &other) const {
-        return !(*this == other);
-    }
+    bool numeric_field_option::operator!=(const numeric_field_option &other) const { return !(*this == other); }
 
     /**
      * @brief Set the indexed flag.

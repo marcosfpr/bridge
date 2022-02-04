@@ -22,6 +22,7 @@
 #define BRIDGE_DOCUMENT_HPP_
 
 #include <memory>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -30,7 +31,9 @@
 
 namespace bridge::schema {
 
-    typedef std::vector<field_v>::iterator field_iterator;
+    typedef std::pair<std::vector<field_v>::const_iterator, std::vector<field_v>::const_iterator> field_iterator;
+    typedef const std::vector<field_v> &field_view;
+    typedef std::vector<std::pair<id_t, std::vector<field_v>>> field_by_id;
 
     /**
      * @brief Bridge's document is the object that can be indexed and searched for.
@@ -51,7 +54,7 @@ namespace bridge::schema {
          *
          * @param fields Field-Value tuples of any kind.
          */
-        document(std::vector<field_v> &&fields);
+        explicit document(std::vector<field_v> &&fields);
 
         /**
          * @brief Destroy the document and all its fields
@@ -82,7 +85,7 @@ namespace bridge::schema {
          *
          * @return size_t The number of fields
          */
-        size_t len() const;
+        [[nodiscard]] size_t len() const;
 
         /**
          * @brief Adds a field to the document
@@ -106,21 +109,21 @@ namespace bridge::schema {
          * @tparam V Type of the value.
          * @param field Field  of type V.
          */
-        template <FieldValue V> void add(field<V> field);
+        template <FieldValue V> void add(field<V> field) { fields_.emplace_back(field); }
 
         /**
          * @brief Get the fields iterator.
          *
-         * @return field_iterator Iterator over document's fields.
+         * @return field_view Iterator over document's fields.
          */
-        field_iterator get_fields();
+        [[nodiscard]] field_view get_fields() const;
 
         /**
          * @brief Get the sorted fields iterator.
          *
-         * @return field_iterator Iterator over document's fields.
+         * @return field_view Iterator over document's fields.
          */
-        field_iterator get_sorted_fields();
+        [[nodiscard]] field_by_id get_sorted_fields();
 
         /**
          * @brief Get all fields given a field_id.
@@ -128,7 +131,20 @@ namespace bridge::schema {
          * @param field_id Field id.
          * @return field_iterator Iterator over document's fields.
          */
-        field_iterator get_all_by_id(id_t field_id);
+        [[nodiscard]] field_iterator get_all_by_id(id_t field_id) const;
+
+        /**
+         * @brief Get all fields given a field_id.
+         *
+         * @param field_id Field id.
+         * @return field_iterator Iterator over document's fields.
+         */
+        [[nodiscard]] field_iterator get_first_by_id(id_t field_id) const;
+
+        /**
+         * @brief Sort documents by field_id.
+         */
+        void sort_by_id();
 
         /**
          * @brief Unwrap field_value  given a field of U.
@@ -142,11 +158,9 @@ namespace bridge::schema {
             throw bridge_error("The field does not holds the corresponding value  type.");
         }
 
-        template <FieldValue U> static bool holds_type(field_v f) {
-            return std::holds_alternative<field<U>>(f);
-        }
-    protected:
+        template <FieldValue U> static bool holds_type(field_v f) { return std::holds_alternative<field<U>>(f); }
 
+      protected:
         /**
          * @brief Unwrap field_value.
          */
@@ -156,9 +170,10 @@ namespace bridge::schema {
                 return std::get<field<std::string>>(f).get_id();
             } else if (std::holds_alternative<field<uint32_t>>(f)) {
                 return std::get<field<uint32_t>>(f).get_id();
-            } 
+            }
             throw bridge_error("The field does not holds any valid value types.");
         }
+
       private:
         /**
          * @brief A document is represented as a vector of field unique pointers.
@@ -166,6 +181,7 @@ namespace bridge::schema {
          * rather than create two different vectors lol.
          */
         std::vector<field_v> fields_;
+        bool is_sorted_ = false;
     };
 
 } // namespace bridge::schema

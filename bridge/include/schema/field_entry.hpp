@@ -39,8 +39,6 @@ namespace bridge::schema {
      */
 
     // Concept of a field type: a field type is a string  type or numeric type
-    // todo: define better with good constraints.
-
     /// @brief Concept that defines a function called get_name() that returns a string which is the name of the field
     template <typename T> concept HasName = requires(T t) {
         { t.get_name() } -> std::same_as<std::string>;

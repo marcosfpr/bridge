@@ -19,7 +19,7 @@ TEST(DocumentTest, DocSemantics) {
     ASSERT_EQ(2, doc.len());
 
     // Check the fields
-    auto it = doc.get_fields();
+    auto it = doc.get_fields().begin();
 
     // Check the first field;
     auto text_field = document::get_field_value<std::string>(*it);
@@ -62,14 +62,13 @@ TEST(DocumentTest, UnorderedDocument) {
     ASSERT_EQ(4, doc.len());
 
     // Ordered iterator
-    auto ordered_iterator = doc.get_sorted_fields();
+    auto sorted_fields = doc.get_sorted_fields();
 
     // Check the first field;
-    ASSERT_EQ(1, document::get_field_value<uint32_t>(*ordered_iterator++).get_id());
-    ASSERT_EQ(2, document::get_field_value<uint32_t>(*ordered_iterator++).get_id());
-    ASSERT_EQ(3, document::get_field_value<std::string>(*ordered_iterator++).get_id());
-    ASSERT_EQ(10, document::get_field_value<std::string>(*ordered_iterator++).get_id());
-
+    ASSERT_EQ(1, sorted_fields[0].first);
+    ASSERT_EQ(2, sorted_fields[1].first);
+    ASSERT_EQ(3, sorted_fields[2].first);
+    ASSERT_EQ(10, sorted_fields[3].first);
 
 
 }

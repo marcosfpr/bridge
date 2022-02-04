@@ -21,8 +21,8 @@
 #include <boost/container_hash/hash.hpp>
 
 #include "common/serialization.hpp"
-#include "schema/term.hpp"
 #include "schema/options.hpp"
+#include "schema/term.hpp"
 
 namespace bridge::schema {
 
@@ -60,10 +60,7 @@ namespace bridge::schema {
      * @param other Term to be copied.
      * @return term& a new term.
      */
-    term &term::operator=(const term &other) {
-        this->data_ = other.data_;
-        return *this;
-    }
+    term &term::operator=(const term &other) = default;
 
     /**
      * Move  constructor.
@@ -127,10 +124,10 @@ namespace bridge::schema {
      * @brief Get the field id.
      * @return The field id.
      */
-    id_t term::get_field_id() const {
+    [[maybe_unused]] id_t term::get_field_id() const {
         // first byte of std::string _data is the field id
         return static_cast<id_t>(data_[0]);
-    };
+    }
 
     /**
      * @brief Get the bytes iterator of the term.

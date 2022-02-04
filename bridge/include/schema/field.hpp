@@ -126,6 +126,11 @@ namespace bridge::schema {
             return value;
         }
 
+        template<FieldValue U>
+        [[nodiscard]] [[maybe_unused]] static field<U> from_value(id_t field_id, field_value<U> value) {
+            return field<U>(field_id, *value);
+        }
+
          /**
          * @brief Serialize a field.
          * @tparam Archive Archive type.
@@ -150,12 +155,16 @@ namespace bridge::schema {
     };
 
 
+    // string field
+    typedef field<std::string> text_field;
+    typedef field<uint32_t> uint32_field;
+
     /**
      * @brief In the Bridge project, documents are represented as a collection of fields.
      * @details For this first version, we will only support a two variants of field types: string and integer.
      * @todo It must change in the future lol.
      */
-    typedef std::variant<field<std::string>, field<uint32_t>> field_v;
+    typedef std::variant<text_field, uint32_field> field_v;
 
 } // namespace bridge::schema
 

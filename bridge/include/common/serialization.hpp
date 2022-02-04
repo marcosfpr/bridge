@@ -43,7 +43,7 @@ namespace bridge::serialization {
     using output_archive = boost::archive::binary_oarchive;
     using input_archive = boost::archive::binary_iarchive;
 
-    using json_t = nlohmann::json;
+    using json_t = nlohmann::ordered_json;
 
     /**
      * @brief Custom bridge serialization error.

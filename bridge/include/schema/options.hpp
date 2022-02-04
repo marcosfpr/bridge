@@ -31,10 +31,10 @@ namespace bridge::schema {
     /** @brief Indexing options for text field.
      *  @details This class is used to specify the options associated with a
      *  text field. It has the following properties:
-     * - Default constructible
+     * - Default constructive
      * - Copyable
      * - Equality comparable
-     * - Moveable
+     * - Movable
      * - Hashable
      * - Partial ordering
      */
@@ -99,9 +99,7 @@ namespace bridge::schema {
          *
          * @return Current Value.
          */
-        constexpr explicit operator Value() const {
-            return _index_options;
-        }
+        constexpr explicit operator Value() const { return _index_options; }
 
         /**
          * @brief Preventing usage of text_indexing_class in if statements.
@@ -318,7 +316,7 @@ namespace bridge::schema {
          *
          * @return The indexing_options.
          */
-        [[nodiscard]] text_indexing_option get_indexing_options() const {  return indexing_options; }
+        [[nodiscard]] text_indexing_option get_indexing_options() const { return indexing_options; }
 
         /**
          * @brief Get the stored.
@@ -417,7 +415,7 @@ namespace bridge::schema {
          * @param fast True if the field is fast.
          * @param stored True if the field is stored.
          */
-        numeric_field_option(bool indexed, bool fast, bool stored);
+        numeric_field_option(bool indexed, bool fast, bool stored) noexcept;
 
         /**
          * @brief Copy constructor.
@@ -549,6 +547,5 @@ namespace bridge::schema {
     static const numeric_field_option NUMERIC = numeric_field_option(false, false, false);
 
 } // namespace bridge::schema
-
 
 #endif

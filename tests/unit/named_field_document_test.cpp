@@ -1,7 +1,7 @@
 #include <bridge.hpp>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -11,8 +11,9 @@ TEST(NamedFieldDocumentTest, JSONSerialization) {
     using bridge::schema::string_value;
     using bridge::schema::uint32_value;
 
-    bridge::schema::field_map fmap = {{"body", {field_value<std::string>::create("Hello, world!"), field_value<uint32_t>::create(32)} },
-                                     {"title", {field_value<std::string>::create("That is weird!")}}};
+    bridge::schema::field_map fmap = {
+        {"body", {field_value<std::string>::create("Hello, world!"), field_value<uint32_t>::create(32)}},
+        {"title", {field_value<std::string>::create("That is weird!")}}};
 
     bridge::schema::named_field_document nfd(std::move(fmap));
 
@@ -33,28 +34,26 @@ TEST(NamedFieldDocumentTest, JSONSerialization) {
         // deserialize from json
         bridge::serialization::JSONSerializable auto from_json_entry =
             bridge::serialization::unmarshall_json<bridge::schema::named_field_document>(ifs);
-        
+
         // compare two maps
-        auto original_iterator = nfd.fmap.begin();
-        auto deserialized_iterator = from_json_entry.fmap.begin();
+        auto original_iterator = nfd.fields_by_name.begin();
+        auto deserialized_iterator = from_json_entry.fields_by_name.begin();
 
-        while(original_iterator != nfd.fmap.end()) {
+        while (original_iterator != nfd.fields_by_name.end()) {
 
-            auto& [key, value] =  *original_iterator;
-            auto& [key2, value2] =  *deserialized_iterator;
+            auto &[key, value] = *original_iterator;
+            auto &[key2, value2] = *deserialized_iterator;
 
             EXPECT_EQ(key, key2);
 
-            std::for_each(value.begin(), value.end(), [&](auto& v) {
+            std::for_each(value.begin(), value.end(), [&](auto &v) {
                 // check if v is in value2
-                auto it = std::find_if(value2.begin(), value2.end(), [&](auto& v2) {
+                auto it = std::find_if(value2.begin(), value2.end(), [&](auto &v2) {
                     if (std::holds_alternative<string_value>(v) && std::holds_alternative<string_value>(v2)) {
                         return *std::get<string_value>(v) == *std::get<string_value>(v2);
-                    }
-                    else if (std::holds_alternative<uint32_value>(v) && std::holds_alternative<uint32_value>(v2)) {
+                    } else if (std::holds_alternative<uint32_value>(v) && std::holds_alternative<uint32_value>(v2)) {
                         return *std::get<uint32_value>(v) == *std::get<uint32_value>(v2);
-                    }
-                    else {
+                    } else {
                         return false;
                     }
                 });
@@ -64,7 +63,6 @@ TEST(NamedFieldDocumentTest, JSONSerialization) {
             original_iterator++;
             deserialized_iterator++;
         }
-        
     }
     // close and remove temporary json file
     ifs.close();
@@ -77,6 +75,6 @@ TEST(NamedFieldDocumentTest, JSONSerialization) {
     // std::cout << ss.str() << std::endl;
 
     // ifs.close();
-    
+
     std::remove(tmp_file.c_str());
 }

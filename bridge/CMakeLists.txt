@@ -9,6 +9,7 @@ set(
     src/schema/field_entry.cpp
     src/schema/term.cpp
     src/schema/document.cpp
+    src/schema/schema.cpp
 )
     
 add_library(
