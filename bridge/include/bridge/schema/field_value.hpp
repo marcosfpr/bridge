@@ -27,7 +27,7 @@
 #include <string>
 #include <variant>
 
-#include "../common/serialization.hpp"
+#include "bridge/common/serialization.hpp"
 
 namespace bridge::schema {
 

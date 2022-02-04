@@ -21,7 +21,7 @@
 #include <map>
 #include <utility>
 
-#include "../../include/schema/document.hpp"
+#include "bridge/schema/document.hpp"
 
 namespace bridge::schema {
 

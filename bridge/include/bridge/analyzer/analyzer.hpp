@@ -23,6 +23,6 @@
 #ifndef ANALYZER_HPP_
 #define ANALYZER_HPP_
 
-#include "./regex_analyzer.hpp"
+#include "bridge/analyzer/regex_analyzer.hpp"
 
 #endif

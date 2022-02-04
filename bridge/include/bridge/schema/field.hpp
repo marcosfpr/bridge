@@ -24,7 +24,7 @@
 #include <string>
 #include <variant>
 
-#include "./field_value.hpp"
+#include "bridge/schema/field_value.hpp"
 
 namespace bridge::schema {
 

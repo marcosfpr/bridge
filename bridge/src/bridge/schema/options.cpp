@@ -22,8 +22,8 @@
 #include <optional>
 #include <utility>
 
-#include "../../include/error.hpp"
-#include "../../include/schema/options.hpp"
+#include "bridge/error.hpp"
+#include "bridge/schema/options.hpp"
 
 namespace bridge::schema {
 

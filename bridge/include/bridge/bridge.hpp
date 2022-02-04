@@ -21,10 +21,10 @@
 #ifndef BRIDGE_HPP_
 #define BRIDGE_HPP_
 
-#include "analyzer/analyzer.hpp"
-#include "schema/schema.hpp"
-#include "directory.hpp"
-#include "global.hpp"
-#include "postings.hpp"
+#include "bridge/analyzer/analyzer.hpp"
+#include "bridge/schema/schema.hpp"
+#include "bridge/directory.hpp"
+#include "bridge/global.hpp"
+#include "bridge/postings.hpp"
 
 #endif // BRIDGE_HPP_

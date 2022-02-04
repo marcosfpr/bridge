@@ -20,7 +20,7 @@
 
 #include <utility> // visit
 
-#include "../../include/schema/schema.hpp"
+#include "bridge/schema/schema.hpp"
 
 namespace bridge::schema {
 

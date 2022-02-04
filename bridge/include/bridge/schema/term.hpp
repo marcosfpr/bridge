@@ -26,7 +26,7 @@
 #include <memory>
 #include <vector>
 
-#include "./field.hpp"
+#include "bridge/schema/field.hpp"
 
 namespace bridge::schema {
 

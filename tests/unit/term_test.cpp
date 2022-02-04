@@ -1,4 +1,4 @@
-#include <bridge.hpp>
+#include "bridge/bridge.hpp"
 #include <string>
 #include <gtest/gtest.h>
 
