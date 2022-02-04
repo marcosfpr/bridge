@@ -5,11 +5,11 @@
 
 set(
     SOURCES
-    src/schema/options.cpp
-    src/schema/field_entry.cpp
-    src/schema/term.cpp
-    src/schema/document.cpp
-    src/schema/schema.cpp
+        src/bridge/schema/options.cpp
+        src/bridge/schema/field_entry.cpp
+        src/bridge/schema/term.cpp
+        src/bridge/schema/document.cpp
+        src/bridge/schema/schema.cpp
 )
     
 add_library(
@@ -94,7 +94,7 @@ if (BUILD_WITH_PEDANTIC_WARNINGS)
 endif ()
 
 # Setting public header
- set_target_properties(bridge PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/bridge.hpp")
+ set_target_properties(bridge PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/bridge/bridge.hpp")
 
 # Install
 if (BUILD_INSTALLER)

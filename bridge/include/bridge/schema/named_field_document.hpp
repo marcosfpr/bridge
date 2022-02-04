@@ -26,8 +26,8 @@
 #include <variant>
 #include <vector>
 
-#include "common/serialization.hpp"
-#include "schema/field_value.hpp"
+#include "bridge/common/serialization.hpp"
+#include "bridge/schema/field_value.hpp"
 
 #include "absl/container/btree_map.h"
 

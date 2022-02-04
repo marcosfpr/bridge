@@ -36,7 +36,7 @@ else()
         target_link_libraries(test_bridge bridge gtest gtest_main)
 endif()
 
-include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+include_directories(${gtest_SOURCE_DIR}/bridge ${gtest_SOURCE_DIR})
 
 target_link_libraries(test_bridge bridge)
 

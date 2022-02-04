@@ -20,9 +20,9 @@
 
 #include <boost/container_hash/hash.hpp>
 
-#include "common/serialization.hpp"
-#include "schema/options.hpp"
-#include "schema/term.hpp"
+#include "bridge/common/serialization.hpp"
+#include "bridge/schema/options.hpp"
+#include "bridge/schema/term.hpp"
 
 namespace bridge::schema {
 

@@ -24,7 +24,7 @@
 #include <utility>
 #include <variant>
 
-#include "./options.hpp"
+#include "bridge/schema/options.hpp"
 
 #ifndef BRIDGE_FIELD_ENTRY_HPP_
 #define BRIDGE_FIELD_ENTRY_HPP_

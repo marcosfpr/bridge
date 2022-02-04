@@ -26,8 +26,8 @@
 #include <variant>
 #include <vector>
 
-#include "../error.hpp"
-#include "./field.hpp"
+#include "bridge/error.hpp"
+#include "bridge/schema/field.hpp"
 
 namespace bridge::schema {
 

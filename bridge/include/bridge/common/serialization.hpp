@@ -32,7 +32,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../error.hpp"
+#include "bridge/error.hpp"
 
 #define BRIDGE_SERIALIZE_VERSION(T, N) BOOST_CLASS_VERSION(T, N)
 #define BRIDGE_SERIALIZATION_SPLIT() BOOST_SERIALIZATION_SPLIT_MEMBER()
