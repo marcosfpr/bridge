@@ -18,13 +18,11 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
-#ifndef BRIDGE_HPP_
-#define BRIDGE_HPP_
+//! \brief Defines a custom iterator over a  string.
 
-#include "analyzer/analyzer.hpp"
-#include "schema/schema.hpp"
-#include "directory.hpp"
-#include "global.hpp"
-#include "postings.hpp"
+#ifndef ANALYZER_HPP_
+#define ANALYZER_HPP_
 
-#endif // BRIDGE_HPP_
+#include "./regex_analyzer.hpp"
+
+#endif

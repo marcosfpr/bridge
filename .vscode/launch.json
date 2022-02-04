@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C++ Launch (GDB)",                
+            "type": "cppdbg",                         
+            "request": "launch",                        
+            "targetArchitecture": "x64",                
+            "program": "${workspaceRoot}/build/bin/test_bridge",                 
+            "miDebuggerPath":"/usr/bin/gdb", 
+            "args": [],     
+            "stopAtEntry": false,                  
+            "cwd": "${workspaceRoot}",                  
+            "externalConsole": true,                  
+        },
+        {
+            "name": "C++ Launch (LLDB)",                
+            "type": "cppdbg",                         
+            "request": "launch",                        
+            "targetArchitecture": "x64",                
+            "program": "${workspaceRoot}/build/bin/test_bridge",                 
+            "miDebuggerPath":"/usr/bin/lldb-11", 
+            "args": [],     
+            "stopAtEntry": false,                  
+            "cwd": "${workspaceRoot}",                  
+            "externalConsole": true,                  
+        }
+    ]
+ }
+ 

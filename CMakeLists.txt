@@ -83,11 +83,9 @@ else()
 endif()
 
 
-
 if(GCOV AND LCOV AND GENHTML)
         set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage -O0")
 endif()
-
 
 #######################################################
 ### Libraries                                       ###

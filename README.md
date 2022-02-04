@@ -9,3 +9,13 @@
     <a href="https://github.com/marcosfpr/ltrpp/issues">Request Feature</a>
   </p>
 </p>
+
+
+### TODO List
+
+
+- [ ] JSON Schema serialization/deserialization.
+- [ ] Field implementation
+- [ ] Schema implementation
+- [ ] Documentation about the whole process.
+- [ ] Logging errors. (fmt)
