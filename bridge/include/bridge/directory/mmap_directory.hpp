@@ -18,12 +18,29 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
-#ifndef BRIDGE_HPP_
-#define BRIDGE_HPP_
+#include <memory>
+#include <shared_mutex>
+#include <unordered_map>
 
-#include "bridge/analyzer/analyzer.hpp"
-#include "bridge/schema.hpp"
-#include "bridge/directory.hpp"
-#include "bridge/global.hpp"
+#include "bridge/directory/directory.hpp"
+#include "bridge/directory/read_only_source.hpp"
 
-#endif // BRIDGE_HPP_
+#ifndef MMAP_DIRECTORY_HPP_
+#define MMAP_DIRECTORY_HPP_
+
+namespace bridge::directory {
+    /**
+     *  @brief Directory storing data in files, read via mmap.
+     *  The mmap object are cached to limit  the system calls.
+     */
+    class MMapDirectory : public Directory {
+      public:
+
+      private:
+        Path root_;
+        std::unordered_map<Path, std::shared_ptr<read_only_source>> mmap_cache_;
+        std::shared_ptr<std::optional<Path>> temp_file_;
+        mutable std::shared_mutex mutex_;
+    };
+} // namespace bridge::directory
+#endif

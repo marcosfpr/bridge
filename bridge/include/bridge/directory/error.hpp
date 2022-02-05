@@ -18,12 +18,40 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
-#ifndef BRIDGE_HPP_
-#define BRIDGE_HPP_
+#ifndef BRIDGE_DIRECTORY_ERROR_HPP_
+#define BRIDGE_DIRECTORY_ERROR_HPP_
 
-#include "bridge/analyzer/analyzer.hpp"
-#include "bridge/schema.hpp"
-#include "bridge/directory.hpp"
-#include "bridge/global.hpp"
+namespace bridge::directory {
+    /**
+     * @brief IO error thrown when a directory operation fails
+     */
+    struct io_error : public std::runtime_error {
+        explicit io_error(const std::string &what)
+            : std::runtime_error("Exception bridge::io_error thrown. Reason: " + what) {}
+    };
 
-#endif // BRIDGE_HPP_
+    /**
+     * @brief Thrown when a file already exists
+     */
+    struct file_already_exists : public io_error {
+        explicit file_already_exists() : io_error("File already exists") {}
+    };
+
+    /**
+     * @brief Thrown when a file does not exist
+     */
+    struct file_not_found : public io_error {
+        explicit file_not_found() : io_error("File not found") {}
+    };
+
+    /**
+     * @brief Thrown when some unknown error occurs
+     */
+    struct file_error : public std::runtime_error {
+        explicit file_error(const std::string &what)
+            : std::runtime_error("Exception bridge::file_error thrown. Reason: " + what) {}
+    };
+
+} // namespace bridge::directory
+
+#endif

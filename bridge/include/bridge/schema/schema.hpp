@@ -31,8 +31,6 @@
 #include "bridge/schema/field.hpp"
 #include "bridge/schema/field_entry.hpp"
 #include "bridge/schema/named_field_document.hpp"
-#include "bridge/schema/options.hpp"
-#include "bridge/schema/term.hpp"
 
 namespace bridge::schema {
 
