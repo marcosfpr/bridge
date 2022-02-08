@@ -44,6 +44,26 @@ namespace bridge::directory {
         explicit file_not_found() : io_error("File not found") {}
     };
 
+    enum open_directory_error_type {
+        directory_not_found,
+        not_a_directory,
+    };
+
+    struct open_directory_error : public io_error {
+        explicit open_directory_error(open_directory_error_type type) : io_error(get_what(type)) {}
+
+        static std::string get_what(open_directory_error_type type) {
+            switch (type) {
+                case directory_not_found:
+                    return "Directory not found";
+                case not_a_directory:
+                    return "Not a directory";
+                default:
+                    return "Unknown error";
+            }
+        }
+    };
+
     /**
      * @brief Thrown when some unknown error occurs
      */

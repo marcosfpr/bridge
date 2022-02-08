@@ -27,5 +27,6 @@
 #include "bridge/schema/named_field_document.hpp"
 #include "bridge/schema/options.hpp"
 #include "bridge/schema/term.hpp"
+#include "bridge/schema/schema.hpp"
 
 #endif

@@ -25,6 +25,7 @@
 #include "bridge/directory/error.hpp"
 #include "bridge/directory/read_only_source.hpp"
 #include "bridge/directory/mmap_directory.hpp"
+#include "bridge/directory/ram_directory.hpp"
 
 
 #endif // DIRECTORY_ALL_HPP_

@@ -59,7 +59,7 @@ namespace bridge::directory {
         /**
          * @brief Creates an empty source.
          */
-        [[nodiscard]] static std::unique_ptr<read_only_source> empty() {
+        [[nodiscard]] static std::shared_ptr<read_only_source> empty() {
             throw io_error("Empty source is not implemented");
         }
 
@@ -107,7 +107,7 @@ namespace bridge::directory {
          * @brief Return a copy of the read-only source
          */
         [[nodiscard]] std::unique_ptr<read_only_source> clone() const override {
-            return std::make_unique<mmap_source>(path_, mmap_);
+            return std::make_unique<mmap_source>(path_, *mmap_);
         }
 
         /**
@@ -123,7 +123,7 @@ namespace bridge::directory {
         /**
          * @brief Creates an empty source.
          */
-        [[nodiscard]] static std::unique_ptr<read_only_source> empty() {
+        [[nodiscard]] static std::shared_ptr<read_only_source> empty() {
             throw io_error("Empty source is not implemented for mmap_source");
         }
 
@@ -148,6 +148,16 @@ namespace bridge::directory {
         explicit in_memory_source(std::vector<unsigned char> data) : data_(std::move(data)) {}
 
         /**
+         * @brief Constructs an in_memory_source from a raw pointer and a size.
+         * @param data raw pointer to the data
+         * @param size size of the data
+         */
+        explicit in_memory_source(const char *data, size_t size) {
+            data_.resize(size);
+            std::copy(data, data + size, data_.begin());
+        }
+
+        /**
          * @brief Return a copy of the read-only source
          */
         [[nodiscard]] std::unique_ptr<read_only_source> clone() const override {
@@ -167,8 +177,8 @@ namespace bridge::directory {
         /**
          * @brief Creates an empty source.
          */
-        [[nodiscard]] static std::unique_ptr<read_only_source> empty() {
-            throw io_error("Empty source is not implemented for in_memory_source");
+        [[nodiscard]] static std::shared_ptr<read_only_source> empty() {
+            return std::make_shared<in_memory_source>(std::vector<unsigned char>());
         }
 
         /**

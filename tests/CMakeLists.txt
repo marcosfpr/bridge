@@ -13,6 +13,7 @@ add_executable(
   unit/document_test.cpp
   unit/named_field_document_test.cpp
   unit/schema_test.cpp
+  unit/directory_test.cpp
 )
 
 # add_executable(

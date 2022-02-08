@@ -21,10 +21,14 @@
 #ifndef DIRECTORY_HPP_
 #define DIRECTORY_HPP_
 
-#include <utility>
 #include <filesystem>
+#include <utility>
+#include <vector>
 
-#include <boost/asio/buffered_write_stream.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/device/back_inserter.hpp>
 
 #include "bridge/directory/error.hpp"
 #include "bridge/directory/read_only_source.hpp"
@@ -32,7 +36,22 @@
 namespace bridge::directory {
 
     using Path = std::filesystem::path;
-    using Writer = boost::asio::buffered_write_stream<std::ostream>;
+
+    template<typename Device> using Writer = boost::iostreams::stream<Device>;
+    template<typename Source> using Reader = boost::iostreams::stream<Source>;
+
+    using FileDevice = boost::iostreams::file_sink;
+    using ArrayDevice = boost::iostreams::back_insert_device<std::vector<char>>;
+
+    using FileSource = boost::iostreams::file_source;
+    using ArraySource = boost::iostreams::array_source;
+
+    using ArrayWriter = boost::iostreams::stream<ArrayDevice>;
+    using FileWriter = boost::iostreams::stream<FileDevice>;
+
+    using FileReader = boost::iostreams::stream<FileSource>;
+    using ArrayReader = boost::iostreams::stream<ArraySource>;
+
 
     /**
      * @brief Write-once many read (WORM) abstraction for where bridge's index should be stored.
@@ -41,52 +60,48 @@ namespace bridge::directory {
      * 1. The MMapDirectory, which uses mmap() to map the index into memory.
      * 2. The RAMDirectory, which is a test functionality that stores the index in RAM.
      */
-     class Directory {
-     public:
-         /**
-          * @brief Virtual destructor for Directory.
-          */
-       virtual ~Directory() = default;
+     template<typename Device>
+    class Directory {
+      public:
+        /**
+         * @brief Virtual destructor for Directory.
+         */
+        virtual ~Directory() = default;
 
-       /**
-        * @brief Operator << for Debbuging purposes.
-        */
-       friend std::ostream& operator<<(std::ostream& os, const Directory& dir) {
-           throw std::runtime_error("No implementation for operator<< for Directory was found.");
-       }
+        /**
+         * @brief Operator << for Debbuging purposes.
+         */
+        friend std::ostream &operator<<(std::ostream &os, const Directory &dir) {
+            throw std::runtime_error("No implementation for operator<< for Directory was found.");
+        }
 
+        /**
+         * @brief Opens a virtual file for read.
+         * @details Once  a file is opened, its data may not be modified.
+         * Specifically, subsequent write or flush should have  no effect in the object.
+         * @return read_only_source Read only source.
+         */
+        [[nodiscard]] virtual std::shared_ptr<read_only_source> open_read(const Path& path) const = 0;
 
-       /**
-        * @brief Opens a virtual file for read.
-        * @details Once  a file is opened, its data may not be modified.
-        * Specifically, subsequent write or flush should have  no effect in the object.
-        * @return read_only_source Read only source.
-        */
-       [[nodiscard]] virtual std::optional<std::unique_ptr<read_only_source>> open_read() const = 0;
+        /**
+         * @brief Removes a file
+         * @details Removing a file will not affect eventual existing read_only_source pointing to it.
+         */
+        virtual void remove(const Path& path) = 0;
 
-       /**
-        * @brief Removes a file
-        * @details Removing a file will not affect eventual existing read_only_source pointing to it.
-        */
-       virtual void remove() = 0;
+        /**
+         * @brief Opens a virtual file for write.
+         * @return Writer stream.
+         */
+        [[nodiscard]] virtual std::unique_ptr<Writer<Device>> open_write(const Path& path) = 0;
 
-       /**
-        * @brief Opens a virtual file for write.
-        * @details Once a file is opened, its data may not be modified.
-        * Specifically, subsequent write or flush should have  no effect in the object.
-        * @return Writer.
-        */
-       [[nodiscard]] virtual std::unique_ptr<Writer> open_write() = 0;
-
-       /**
-        * @brief Atomically replace the content  of a file by data.
-        * This calls ensure that reads can never 'observe' a partially written file.
-        * The file may or may not previously exist.
-        */
-       virtual void replace_content(const Path& path, unsigned char* data, size_t length) = 0;
-
-
-     };
+        /**
+         * @brief Atomically replace the content  of a file by data.
+         * This calls ensure that reads can never 'observe' a partially written file.
+         * The file may or may not previously exist.
+         */
+        virtual void replace_content(const Path &path, const char *data, std::streamsize length) = 0;
+    };
 
 } // namespace bridge::directory
 
