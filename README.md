@@ -9,3 +9,5 @@
     <a href="https://github.com/marcosfpr/ltrpp/issues">Request Feature</a>
   </p>
 </p>
+
+Early stages of development ^-^
