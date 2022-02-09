@@ -18,12 +18,15 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
-#ifndef BRIDGE_HPP_
-#define BRIDGE_HPP_
+#ifndef SCHEMA_ALL_HPP_
+#define SCHEMA_ALL_HPP_
 
-#include "bridge/analyzer/analyzer.hpp"
-#include "bridge/schema.hpp"
-#include "bridge/directory.hpp"
-#include "bridge/global.hpp"
+#include "bridge/schema/document.hpp"
+#include "bridge/schema/field.hpp"
+#include "bridge/schema/field_entry.hpp"
+#include "bridge/schema/named_field_document.hpp"
+#include "bridge/schema/options.hpp"
+#include "bridge/schema/term.hpp"
+#include "bridge/schema/schema.hpp"
 
-#endif // BRIDGE_HPP_
+#endif

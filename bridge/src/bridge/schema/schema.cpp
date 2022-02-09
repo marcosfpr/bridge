@@ -41,9 +41,9 @@ namespace bridge::schema {
      *
      * @param name The name of the field
      * @param text_options The options of the text field
-     * @return SchemaBuilder& A reference to the builder
+     * @return Id attributed to the field
      */
-    SchemaBuilder &SchemaBuilder::add_text_field(std::string &&name, text_field_option text_options) {
+    id_t SchemaBuilder::add_text_field(std::string &&name, text_field_option text_options) {
         // create text field entry
         field_entry<text_field_option> text_field_entry =
             field_entry<text_field_option>::create(name, std::move(text_options));
@@ -56,9 +56,9 @@ namespace bridge::schema {
      *
      * @param name The name of the field
      * @param numeric_options The options of the numeric field
-     * @return SchemaBuilder& A reference to the builder
+     * @return Id attributed to the field
      */
-    SchemaBuilder &SchemaBuilder::add_numeric_field(std::string &&name, numeric_field_option numeric_options) {
+    id_t SchemaBuilder::add_numeric_field(std::string &&name, numeric_field_option numeric_options) {
         // create numeric field entry
         field_entry<numeric_field_option> numeric_field_entry =
             field_entry<numeric_field_option>::create(name, std::move(numeric_options));
@@ -72,12 +72,12 @@ namespace bridge::schema {
      * @param name The name of the field
      * @param field_entry The field entry
      */
-    SchemaBuilder &SchemaBuilder::add_field(std::string &&name, field_entry_v field_entry) {
+    id_t SchemaBuilder::add_field(std::string &&name, field_entry_v field_entry) {
         // add field entry to schema
         id_t field_id = field_entries_.size();
         field_entries_.push_back(std::move(field_entry));
         field_names_.insert({std::move(name), field_id});
-        return *this;
+        return field_id;
     }
 
     /**

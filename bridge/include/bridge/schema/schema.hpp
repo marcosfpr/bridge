@@ -31,8 +31,6 @@
 #include "bridge/schema/field.hpp"
 #include "bridge/schema/field_entry.hpp"
 #include "bridge/schema/named_field_document.hpp"
-#include "bridge/schema/options.hpp"
-#include "bridge/schema/term.hpp"
 
 namespace bridge::schema {
 
@@ -151,7 +149,7 @@ namespace bridge::schema {
          * @param text_options The options of the text field
          * @return SchemaBuilder& A reference to the builder
          */
-        SchemaBuilder &add_text_field(std::string &&name, text_field_option text_options);
+        id_t add_text_field(std::string &&name, text_field_option text_options);
 
         /**
          * @brief Add a new field to the schema
@@ -160,14 +158,14 @@ namespace bridge::schema {
          * @param numeric_options The options of the numeric field
          * @return SchemaBuilder& A reference to the builder
          */
-        SchemaBuilder &add_numeric_field(std::string &&name, numeric_field_option numeric_options);
+        id_t add_numeric_field(std::string &&name, numeric_field_option numeric_options);
 
         /**
          * @brief Add a new field to the schema
          *
          * @param field_entry The field entry
          */
-        SchemaBuilder &add_field(std::string &&name, field_entry_v field_entry);
+        id_t add_field(std::string &&name, field_entry_v field_entry);
 
         /**
          * @brief Build the schema

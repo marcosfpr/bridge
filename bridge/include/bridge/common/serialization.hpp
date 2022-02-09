@@ -23,6 +23,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -125,10 +126,25 @@ namespace bridge::serialization {
         }
     }
 
-    //! \brief Safe deserialization of the text indexing option.
+    //! \brief Safe unmarshall of whatever type T is.
     template <Serializable T> [[maybe_unused]] static T unmarshall(std::istream &is) {
         try {
             input_archive ia(is);
+            T obj;
+            // read sequence of arguments passed as parameter
+            ia >> obj;
+            // return T constructed from the arguments.
+            return obj;
+        } catch (std::exception &e) {
+            throw serialization_error("Failed to unmarshall: " + std::string(e.what()));
+        }
+    }
+
+    //! \brief Safe unmarshall of whatever type T is.
+    template <Serializable T> [[maybe_unused]] static T unmarshall(std::stringstream& raw_stream) {
+        std::vector<T> unmarshalled;
+        try {
+            input_archive ia(raw_stream);
             T obj;
             // read sequence of arguments passed as parameter
             ia >> obj;
