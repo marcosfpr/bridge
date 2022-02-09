@@ -200,7 +200,7 @@ namespace bridge::directory {
          * This calls ensure that reads can never 'observe' a partially written file.
          * The file may or may not previously exist.
          */
-        void replace_content(const Path &path, const char *data, std::streamsize length) override {
+        void replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) override {
             Path full_path = join(path);
 
             // Lock single writer

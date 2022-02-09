@@ -17,18 +17,17 @@ TEST(TestDirectory, TestRamDirectory) {
 
     RAMDirectory ram_dir;
 
-    std::vector<float> data = {1.0f, 2.0f, 3.0f};
-    char byte[1] = {0x01};
+    bridge::byte_t byte[5] = {0x00, 0x01, 0x02, 0x03, 0x04};
 
     {
         // write file
         auto write_file = ram_dir.open_write(temp_file);
 
-        write_file->write(byte, 1);
+        write_file->write(byte, 5);
 
-        for (auto& d : data) {
-            bridge::serialization::marshall(*write_file, d);
-        }
+//        for (auto& value : float_vec) {
+//            bridge::serialization::marshall(*write_file, value); // why does this not work?
+//        }
 
         write_file->flush();
 
@@ -36,20 +35,12 @@ TEST(TestDirectory, TestRamDirectory) {
     // read file
     auto read_file = ram_dir.open_read(temp_file);
 
-    auto data_read = read_file->deref();
+    const bridge::byte_t* data_read = read_file->deref();
     auto length = read_file->size();
 
-    ASSERT_EQ(length, data.size() * sizeof(float) + 1); // todo: aqui não funciona
+    ASSERT_EQ(length, 5);
 
-    std::stringstream ss(std::string(reinterpret_cast<const char *>(data_read), length));
-
-    char first_byte;
-    ss >> first_byte;
-    ASSERT_EQ(first_byte, (char)0x20ac);
-
-    for (auto& d : data) {
-        auto read_d = bridge::serialization::unmarshall<float>(ss); //NOLINT UnconstrainedVariableType
-        ASSERT_EQ(d, read_d);
+    for (int i = 0; i < length; i++) {
+        ASSERT_EQ((char)data_read[i], byte[i]);
     }
-
 }

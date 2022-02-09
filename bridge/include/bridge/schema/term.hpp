@@ -26,13 +26,14 @@
 #include <memory>
 #include <vector>
 
+#include "bridge/global.hpp"
 #include "bridge/schema/field.hpp"
 
 namespace bridge::schema {
 
     // type aliases and bringing to scope.
-    typedef std::vector<unsigned char>::iterator term_iterator;
-    typedef unsigned const char *raw_bytes;
+    typedef std::vector<bridge::byte_t>::iterator term_iterator;
+    typedef const unsigned char *raw_bytes;
 
     /**
      * @brief Term class represents a stream of bytes.
@@ -48,8 +49,9 @@ namespace bridge::schema {
         /**
          * @brief Constructor.
          * @param data The data to be stored in the term.
+         * @param size The size of the data.
          */
-        explicit term(unsigned char *data); //! < From raw bytes
+        explicit term(bridge::byte_t *data, size_t size); //! < From raw bytes
 
         /**
          * @brief Copy construct a new term object
@@ -125,13 +127,13 @@ namespace bridge::schema {
             //  serialize id_t and uint8_t as a std::vector
             // first position is the field id
             // the rest is the uint32_t data (4 bytes)
-            std::vector<unsigned char> bytes;
+            std::vector<bridge::byte_t> bytes;
             bytes.reserve(sizeof(id_t) + sizeof(uint8_t));
 
-            bytes.push_back(static_cast<unsigned char>(field_id));
-            bytes.push_back(static_cast<unsigned char>(data));
+            bytes.push_back(static_cast<bridge::byte_t>(field_id));
+            bytes.push_back(static_cast<bridge::byte_t>(data));
 
-            return term(bytes.data());
+            return term(bytes.data(), bytes.size());
         }
 
         /**
@@ -142,12 +144,12 @@ namespace bridge::schema {
             //  serialize id_t and uint16_t as a std::vector
             // first position is the field id
             // the rest is the uint32_t data (4 bytes)
-            std::vector<unsigned char> bytes;
+            std::vector<bridge::byte_t> bytes;
             bytes.reserve(sizeof(id_t) + sizeof(uint16_t));
-            bytes.push_back(static_cast<unsigned char>(field_id));
-            bytes.push_back(static_cast<unsigned char>(data >> 8));
-            bytes.push_back(static_cast<unsigned char>(data));
-            return term(bytes.data());
+            bytes.push_back(static_cast<bridge::byte_t>(field_id));
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 8));
+            bytes.push_back(static_cast<bridge::byte_t>(data));
+            return term(bytes.data(), bytes.size());
         }
 
         /**
@@ -159,16 +161,16 @@ namespace bridge::schema {
             // first position is the field id
             // the rest is the uint32_t data (4 bytes)
 
-            std::vector<unsigned char> bytes;
+            std::vector<bridge::byte_t> bytes;
 
             bytes.reserve(sizeof(id_t) + sizeof(uint32_t));          // reserve space for the field id and the data
-            bytes.push_back(static_cast<unsigned char>(field_id));   // push the field id
-            bytes.push_back(static_cast<unsigned char>(data >> 24)); // push the first byte of the data
-            bytes.push_back(static_cast<unsigned char>(data >> 16)); // push the second byte of the data
-            bytes.push_back(static_cast<unsigned char>(data >> 8));  // push the third byte of the data
-            bytes.push_back(static_cast<unsigned char>(data));       // push the fourth byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(field_id));   // push the field id
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 24)); // push the first byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 16)); // push the second byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 8));  // push the third byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data));       // push the fourth byte of the data
 
-            return term(bytes.data());
+            return term(bytes.data(), bytes.size());
         }
 
         /**
@@ -176,20 +178,20 @@ namespace bridge::schema {
          * @return A new term with the data.
          */
         static term from_uint64(id_t field_id, u_int64_t data) {
-            std::vector<unsigned char> bytes;
+            std::vector<bridge::byte_t> bytes;
 
             bytes.reserve(sizeof(id_t) + sizeof(uint64_t));          // reserve space for the field id and the data
-            bytes.push_back(static_cast<unsigned char>(field_id));   // push the field id
-            bytes.push_back(static_cast<unsigned char>(data >> 56)); // push the first byte of the data
-            bytes.push_back(static_cast<unsigned char>(data >> 48)); // push the second byte of the data
-            bytes.push_back(static_cast<unsigned char>(data >> 40)); // push the third byte of the data
-            bytes.push_back(static_cast<unsigned char>(data >> 32)); // push the fourth byte of the data
-            bytes.push_back(static_cast<unsigned char>(data >> 24)); // push the fifth byte of the data
-            bytes.push_back(static_cast<unsigned char>(data >> 16)); // push the sixth byte of the data
-            bytes.push_back(static_cast<unsigned char>(data >> 8));  // push the seventh byte of the data
-            bytes.push_back(static_cast<unsigned char>(data));       // push the eighth byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(field_id));   // push the field id
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 56)); // push the first byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 48)); // push the second byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 40)); // push the third byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 32)); // push the fourth byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 24)); // push the fifth byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 16)); // push the sixth byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data >> 8));  // push the seventh byte of the data
+            bytes.push_back(static_cast<bridge::byte_t>(data));       // push the eighth byte of the data
 
-            return term(bytes.data());
+            return term(bytes.data(), bytes.size());
         }
 
         /**
@@ -201,39 +203,39 @@ namespace bridge::schema {
             // first position is the field id
             // the rest is the std::string data
 
-            std::vector<unsigned char> bytes;
+            std::vector<bridge::byte_t> bytes;
 
             bytes.reserve(sizeof(id_t) + data.size()); // reserve space for the field id and the data
 
-            bytes.push_back(static_cast<unsigned char>(field_id)); // push the field id
+            bytes.push_back(static_cast<bridge::byte_t>(field_id)); // push the field id
 
-            for (auto c : data) {
-                bytes.push_back(static_cast<unsigned char>(c)); // push the data
+            for (char c : data) {
+                bytes.push_back(c); // push the data
             }
 
-            return term(bytes.data());
+            return term(bytes.data(), bytes.size());
         }
 
         /**
          * @brief Get the term from a raw array of bytes.
          * @return A new term with the data.
          */
-        static term from_bytes(id_t field_id, unsigned char *data, size_t size) {
+        static term from_bytes(id_t field_id, bridge::byte_t *data, size_t size) {
             // serialize id_t and byte raw array as a std::vector
             // first position is the field id
             // the rest is the byte raw array data
 
-            std::vector<unsigned char> bytes;
+            std::vector<bridge::byte_t> bytes;
 
             bytes.reserve(sizeof(id_t) + size); // reserve space for the field id and the data
 
-            bytes.push_back(static_cast<unsigned char>(field_id)); // push the field id
+            bytes.push_back(static_cast<bridge::byte_t>(field_id)); // push the field id
 
             for (size_t i = 0; i < size; i++) {
                 bytes.push_back(data[i]); // push the data
             }
 
-            return term(bytes.data());
+            return term(bytes.data(), bytes.size());
         }
 
         /**
@@ -253,10 +255,16 @@ namespace bridge::schema {
          * @warning Unsafe.
          * @return const char* Raw bytes of the term.
          */
-        [[nodiscard]] const unsigned char *as_ref() const; //! As bytes ref.
+        [[nodiscard]] const bridge::byte_t *as_ref() const; //! As bytes ref.
+
+        /**
+         * @brief Get the number of bytes of the term.
+         * @return The number of bytes of the term.
+         */
+        [[nodiscard]] size_t size() const;
 
       private:
-        std::vector<unsigned char> data_;
+        std::vector<bridge::byte_t> data_;
     };
 } // namespace bridge::schema
 

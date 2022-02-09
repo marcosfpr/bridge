@@ -36,15 +36,15 @@ namespace bridge::schema {
 
         this->data_.reserve(1);
         id_t invalid_id = 0;
-        this->data_.push_back(static_cast<unsigned char>(invalid_id));
+        this->data_.push_back(static_cast<bridge::byte_t>(invalid_id));
     }
 
     /**
      * @brief Constructor.
      * @param data The data to be stored in the term.
      */
-    [[maybe_unused]] term::term(unsigned char *data) {
-        this->data_ = std::vector<unsigned char>(data, data + sizeof(data));
+    [[maybe_unused]] term::term(bridge::byte_t *data, size_t size) {
+        this->data_ = std::vector<bridge::byte_t>(data, data + size);
     }
 
     /**
@@ -146,6 +146,12 @@ namespace bridge::schema {
      *
      * @return const char* Raw bytes of the term.
      */
-    const unsigned char *term::as_ref() const { return data_.data(); }
+    const bridge::byte_t *term::as_ref() const { return data_.data(); }
+
+    /**
+         * @brief Get the number of bytes of the term.
+         * @return The number of bytes of the term.
+     */
+    size_t term::size() const { return data_.size(); }
 
 } // namespace bridge::schema

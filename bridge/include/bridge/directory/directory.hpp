@@ -30,6 +30,7 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
 
+#include "bridge/global.hpp"
 #include "bridge/directory/error.hpp"
 #include "bridge/directory/read_only_source.hpp"
 
@@ -40,10 +41,10 @@ namespace bridge::directory {
     template<typename Device> using Writer = boost::iostreams::stream<Device>;
     template<typename Source> using Reader = boost::iostreams::stream<Source>;
 
-    using FileDevice = boost::iostreams::file_sink;
-    using ArrayDevice = boost::iostreams::back_insert_device<std::vector<char>>;
+    using FileDevice = boost::iostreams::basic_file_sink<bridge::byte_t>;
+    using ArrayDevice = boost::iostreams::back_insert_device<std::vector<bridge::byte_t>>;
 
-    using FileSource = boost::iostreams::file_source;
+    using FileSource = boost::iostreams::basic_file_source<bridge::byte_t>;
     using ArraySource = boost::iostreams::array_source;
 
     using ArrayWriter = boost::iostreams::stream<ArrayDevice>;
@@ -100,7 +101,7 @@ namespace bridge::directory {
          * This calls ensure that reads can never 'observe' a partially written file.
          * The file may or may not previously exist.
          */
-        virtual void replace_content(const Path &path, const char *data, std::streamsize length) = 0;
+        virtual void replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) = 0;
     };
 
 } // namespace bridge::directory

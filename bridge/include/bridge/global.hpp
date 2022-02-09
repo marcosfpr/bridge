@@ -21,9 +21,13 @@
 #ifndef GLOBAL_HPP_
 #define GLOBAL_HPP_
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace bridge {
+
+    /// @brief A byte type with a size of 8 bits is represented as a char.
+    /// @details This type is used to represent a byte.
+    typedef char byte_t;
 
     //! \brief A `u32` identifying a document within a segment.
     // Documents have their `DocId` assigned incrementally,

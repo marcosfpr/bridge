@@ -36,7 +36,44 @@ TEST(TermTest, TestSemantics) {
 
 }
 
-// todo
-// TEST(TermTest, SchemaBuilderTerm) {
+ TEST(TermTest, SchemaBuilderTerm) {
+     using bridge::schema::term;
 
-// }
+     bridge::schema::SchemaBuilder schema_builder;
+
+     auto title_field = schema_builder.add_text_field("title", bridge::schema::STRING);
+     auto count_field = schema_builder.add_text_field("count", bridge::schema::STRING);
+
+     {
+         term term = term::from_string(title_field, "Hello"); // first byte - id, rest - text
+         ASSERT_EQ(term.get_field_id(), title_field);
+
+         auto raw_bytes = term.as_ref();
+
+         ASSERT_EQ(term.size(), 1 + 5);
+         ASSERT_EQ(raw_bytes[0], static_cast<id_t>(0)); // CHECK
+
+         ASSERT_EQ(raw_bytes[1], 'H');
+         ASSERT_EQ(raw_bytes[2], 'e');
+         ASSERT_EQ(raw_bytes[3], 'l');
+         ASSERT_EQ(raw_bytes[4], 'l');
+         ASSERT_EQ(raw_bytes[5], 'o');
+
+     }
+
+     {
+         term term = term::from_uint32(count_field, 932); // first byte - id, rest - count
+         ASSERT_EQ(term.get_field_id(), count_field);
+
+         auto raw_bytes = term.as_ref();
+
+         ASSERT_EQ(term.size(), 1 + 4);
+         ASSERT_EQ(raw_bytes[0], static_cast<id_t>(1)); // CHECK
+
+         ASSERT_EQ(raw_bytes[1], static_cast<bridge::byte_t>(0x00));
+         ASSERT_EQ(raw_bytes[2], static_cast<bridge::byte_t>(0x00));
+         ASSERT_EQ(raw_bytes[3], static_cast<bridge::byte_t>(0x03));
+         ASSERT_EQ(raw_bytes[4], static_cast<bridge::byte_t>(0xA4));
+     }
+
+ }

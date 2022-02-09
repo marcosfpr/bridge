@@ -30,7 +30,7 @@
 namespace bridge::directory {
 
     /// @brief A cache directory that stores data in RAM.
-    typedef std::map<Path, std::vector<char>> ram_cache_t;
+    typedef std::map<Path, std::vector<bridge::byte_t>> ram_cache_t;
 
     class RAMDirectory : public Directory<ArrayDevice> {
       public:
@@ -71,7 +71,6 @@ namespace bridge::directory {
             if (it == ram_cache_.end()) {
                 throw io_error("File not found: " + path.string());
             }
-
             return std::make_shared<in_memory_source>(it->second.data(), it->second.size());
         }
 
@@ -108,7 +107,7 @@ namespace bridge::directory {
             }
 
             // Add the file to the cache
-            ram_cache_[path] = std::vector<char>();
+            ram_cache_[path] = std::vector<bridge::byte_t>();
 
             // open file  for write
             ArrayDevice device(ram_cache_[path]);
@@ -122,7 +121,7 @@ namespace bridge::directory {
          * This calls ensure that reads can never 'observe' a partially written file.
          * The file may or may not previously exist.
          */
-        void replace_content(const Path &path, const char *data, std::streamsize length) override {
+        void replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) override {
             // Lock single writer
             std::unique_lock lock(mutex_);
 
@@ -130,10 +129,10 @@ namespace bridge::directory {
             auto it = ram_cache_.find(path);
             if(it != ram_cache_.end()) {
                 // Replace the file in the cache
-                ram_cache_[path] = std::vector<char>(data, data + length);
+                ram_cache_[path] = std::vector<bridge::byte_t>(data, data + length);
             } else {
                 // Add the file to the cache
-                ram_cache_[path] = std::vector<char>(data, data + length);
+                ram_cache_[path] = std::vector<bridge::byte_t>(data, data + length);
             }
         }
 

@@ -49,7 +49,7 @@ namespace bridge::directory {
         /**
          * @brief Return a sequence of bytes given the source
          */
-        [[nodiscard]] virtual const unsigned char *deref() const = 0;
+        [[nodiscard]] virtual const bridge::byte_t *deref() const = 0;
 
         /**
          * @brief Return the size of the source
@@ -77,7 +77,7 @@ namespace bridge::directory {
          */
         explicit mmap_source(std::string path) : path_(std::move(path)) {
             std::error_code error;
-            mmap_ = std::make_unique<mio::shared_ummap_source>(std::move(mio::make_mmap_source(path_, error)));
+            mmap_ = std::make_unique<mio::shared_mmap_source>(std::move(mio::make_mmap_source(path_, error)));
             if (error) {
                 throw io_error(error.message());
             }
@@ -89,7 +89,7 @@ namespace bridge::directory {
          */
         explicit mmap_source(std::string path, size_t offset, size_t size) : path_(std::move(path)) {
             std::error_code error;
-            mmap_ = std::make_unique<mio::shared_ummap_source>(
+            mmap_ = std::make_unique<mio::shared_mmap_source>(
                 std::move(mio::make_mmap_source(path_, offset, size, error)));
             if (error) {
                 throw io_error(error.message());
@@ -100,8 +100,8 @@ namespace bridge::directory {
          * @brief Constructs a mmap_source from a path and a mmap for the path.
          * @warning Use clone() instead.
          */
-        explicit mmap_source(std::string path, const mio::shared_ummap_source &mmap)
-            : path_(std::move(path)), mmap_(std::make_unique<mio::shared_ummap_source>(mmap)) {}
+        explicit mmap_source(std::string path, const mio::shared_mmap_source &mmap)
+            : path_(std::move(path)), mmap_(std::make_unique<mio::shared_mmap_source>(mmap)) {}
 
         /**
          * @brief Return a copy of the read-only source
@@ -113,7 +113,7 @@ namespace bridge::directory {
         /**
          * @brief Return a sequence of bytes given the source
          */
-        [[nodiscard]] const unsigned char *deref() const override { return mmap_->data(); }
+        [[nodiscard]] const bridge::byte_t *deref() const override { return mmap_->data(); }
 
         /**
          * @brief Return the size of the source
@@ -135,7 +135,7 @@ namespace bridge::directory {
         }
 
       private:
-        std::unique_ptr<mio::shared_ummap_source> mmap_;
+        std::unique_ptr<mio::shared_mmap_source> mmap_;
         std::string path_;
     };
 
@@ -145,14 +145,14 @@ namespace bridge::directory {
          * @brief Constructs a in_memory_source from a file
          * @warning The file must exist and be readable
          */
-        explicit in_memory_source(std::vector<unsigned char> data) : data_(std::move(data)) {}
+        explicit in_memory_source(std::vector<bridge::byte_t> data) : data_(std::move(data)) {}
 
         /**
          * @brief Constructs an in_memory_source from a raw pointer and a size.
          * @param data raw pointer to the data
          * @param size size of the data
          */
-        explicit in_memory_source(const char *data, size_t size) {
+        explicit in_memory_source(const bridge::byte_t *data, size_t size) {
             data_.resize(size);
             std::copy(data, data + size, data_.begin());
         }
@@ -167,7 +167,7 @@ namespace bridge::directory {
         /**
          * @brief Return a sequence of bytes given the source
          */
-        [[nodiscard]] const unsigned char *deref() const override { return data_.data(); }
+        [[nodiscard]] const bridge::byte_t *deref() const override { return data_.data(); }
 
         /**
          * @brief Return the size of the source
@@ -178,20 +178,20 @@ namespace bridge::directory {
          * @brief Creates an empty source.
          */
         [[nodiscard]] static std::shared_ptr<read_only_source> empty() {
-            return std::make_shared<in_memory_source>(std::vector<unsigned char>());
+            return std::make_shared<in_memory_source>(std::vector<bridge::byte_t>());
         }
 
         /**
          * @brief Creates a read_only_source that is just a view over a slice of the data.
          */
         [[nodiscard]] std::unique_ptr<read_only_source> slice(size_t from_offset, size_t to_offset) const override {
-            return std::make_unique<in_memory_source>(std::vector<unsigned char>(
+            return std::make_unique<in_memory_source>(std::vector<bridge::byte_t>(
                 data_.begin() + from_offset,               // NOLINT(cppcoreguidelines-narrowing-conversions)
                 data_.begin() + from_offset + to_offset)); // NOLINT(cppcoreguidelines-narrowing-conversions)
         }
 
       private:
-        std::vector<unsigned char> data_;
+        std::vector<bridge::byte_t> data_;
     };
 
 } // namespace bridge::directory
