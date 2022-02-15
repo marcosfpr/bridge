@@ -53,6 +53,8 @@ namespace bridge::directory {
     using FileReader = boost::iostreams::stream<FileSource>;
     using ArrayReader = boost::iostreams::stream<ArraySource>;
 
+    /// @brief WriterPtr
+    template<typename Device> using WriterPtr = std::unique_ptr<Writer<Device>>;
 
     /**
      * @brief Write-once many read (WORM) abstraction for where bridge's index should be stored.
@@ -103,6 +105,7 @@ namespace bridge::directory {
          */
         virtual void replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) = 0;
     };
+
 
 } // namespace bridge::directory
 

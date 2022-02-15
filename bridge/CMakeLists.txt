@@ -10,6 +10,7 @@ set(
         src/bridge/schema/term.cpp
         src/bridge/schema/document.cpp
         src/bridge/schema/schema.cpp
+        src/bridge/store/writer.cpp
 )
     
 add_library(

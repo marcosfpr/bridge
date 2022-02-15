@@ -110,10 +110,19 @@ namespace bridge::serialization {
         {t.serialize(std::declval<input_archive &>())};
     };
 
+    // Concept for a variant of three serializable types
+    template <typename T>
+    concept SerializableConcrete =  Primitive<T> || PrimitiveContainer<T> || MemberFunctionSerialize<T> ||
+        GlobalFunctionSerialize<T> || PointerToSerializable<T> || ReferenceToSerializable<T>;
+
+    // Concept for a variant of two serializable types
+    template <typename T>
+    concept VariantOfTwoSerializable = SerializableConcrete<std::variant_alternative_t<0, T>> &&
+        SerializableConcrete<std::variant_alternative_t<1, T>>;
+
     // Concept for a Serializable type
     template <typename T>
-    concept Serializable = Primitive<T> || PrimitiveContainer<T> || MemberFunctionSerialize<T> ||
-        GlobalFunctionSerialize<T> || PointerToSerializable<T> || ReferenceToSerializable<T>;
+    concept Serializable = SerializableConcrete<T> || VariantOfTwoSerializable<T>;
 
     //! \brief Safe serialization of the text indexing option.
     template <Serializable T> [[maybe_unused]] uint64_t marshall(std::ostream &os, T &&obj) {

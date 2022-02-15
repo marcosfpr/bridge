@@ -18,13 +18,10 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
 
-#ifndef BRIDGE_HPP_
-#define BRIDGE_HPP_
+#ifndef STORE_ALL_HPP_
+#define STORE_ALL_HPP_
 
-#include "bridge/analyzer/analyzer.hpp"
-#include "bridge/schema.hpp"
-#include "bridge/directory.hpp"
-#include "bridge/global.hpp"
-#include "bridge/store.hpp"
+#include "bridge/store/store.hpp"
+#include "bridge/store/writer.hpp"
 
-#endif // BRIDGE_HPP_
+#endif
