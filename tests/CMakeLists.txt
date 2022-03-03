@@ -14,6 +14,7 @@ add_executable(
   unit/named_field_document_test.cpp
   unit/schema_test.cpp
   unit/directory_test.cpp
+  unit/store_test.cpp
 )
 
 # add_executable(

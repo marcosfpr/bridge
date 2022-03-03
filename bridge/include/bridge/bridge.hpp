@@ -27,4 +27,8 @@
 #include "bridge/global.hpp"
 #include "bridge/store.hpp"
 
+// 3rd party
+#include "bridge/compression/lz4.h"
+#include "bridge/compression/lz4xx.h"
+
 #endif // BRIDGE_HPP_

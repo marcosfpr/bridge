@@ -30,6 +30,8 @@
 
 #include <mio/shared_mmap.hpp>
 
+#include "bridge/directory/error.hpp"
+
 namespace bridge::directory {
 
     /**

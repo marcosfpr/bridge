@@ -32,10 +32,13 @@ namespace bridge::store {
     class offset_index {
     public:
 
+      ///! @brief  Default constructor for deserialization
+      offset_index() = default;
+
       /**
        * @brief Construct a new offset index object
        */
-        explicit offset_index(bridge::DocId doc_id, std::uint64_t offset) : doc_id(doc_id), offset(offset) {}
+        explicit offset_index(bridge::doc_id_t doc_id, std::uint64_t offset) : doc_id(doc_id), offset(offset) {}
 
         /**
          * @brief Copy constructor
@@ -56,6 +59,20 @@ namespace bridge::store {
          * @brief Move assignment operator
          */
         offset_index& operator=(offset_index&&) = default;
+
+        /**
+         * @brief Get the doc id
+         *
+         * @return doc_id_t
+         */
+        [[nodiscard]] bridge::doc_id_t get_doc_id() const { return doc_id; }
+
+        /**
+         * @brief Get the offset
+         *
+         * @return std::uint64_t
+         */
+        [[nodiscard]] std::uint64_t get_offset() const { return offset; }
 
         /**
          * @brief Equality operator
@@ -94,7 +111,7 @@ namespace bridge::store {
         friend boost::serialization::access; //! Allow to access the private members of field.
 
       private:
-        bridge::DocId doc_id;
+        bridge::doc_id_t doc_id;
         std::uint64_t offset;
     };
 

@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "bridge/directory/directory.hpp"
-#include "bridge/schema/field_value.hpp"
+#include "bridge/schema/field.hpp"
 #include "bridge/store/store.hpp"
 #include "bridge/common/serialization.hpp"
 
@@ -37,10 +37,11 @@ namespace bridge::store {
       public:
         /**
          * @brief Construct a new store writer object
-         * @param writer
+         * @param writer The writer to write to the directory.
+         * @param compress True if you want to compress the data (You should use this option if you have a lot of data).
          */
-        explicit store_writer(WriterPtr<Device> writer)
-            : offsets(), intermediary_buffer(), current_block(), doc_id(), written() {
+        explicit store_writer(WriterPtr<Device> writer, bool compress = true)
+            : offsets(), intermediary_buffer(), current_block(), doc_id(), written(), compress(compress) {
             this->writer = writer;
             this->doc_id = 0;
             this->written = 0;
@@ -58,15 +59,14 @@ namespace bridge::store {
 
         /**
          * @brief Write field_values to store
-         * @param field_values Vector of references to field_value objects
+         * @param fields Vector of references to field_v objects
          */
-        void store(std::vector<field_value_v> &field_values);
+        void store(std::vector<field_v> &fields);
 
         /**
          * @brief Write field_values to store.
-         * @param compress True if you want to compress the data (You should use this option if you have a lot of data).
          */
-        void write(bool compress = true);
+        void write();
 
         /**
          * @brief Close the store writer.
@@ -89,20 +89,26 @@ namespace bridge::store {
         /**
          * @brief Write the field values onto the intermediary buffer.
          */
-        void write_on_intermediary_buffer(std::vector<field_value_v> &field_values);
+        void write_on_intermediary_buffer(std::vector<field_v> &field_values);
 
         /**
          * @brief Write the intermediary buffer to the current block.
          */
         void write_on_current_block();
 
+        /**
+         * @brief Compress the current block to the intermediary buffer.
+         */
+        void compress_to_intermediary_buffer();
+
       private:
-        DocId doc_id;
+        doc_id_t doc_id;
         std::vector<offset_index> offsets;
         uint64_t written;
         WriterPtr<Device> writer;
         std::vector<bridge::byte_t> intermediary_buffer;
         std::vector<bridge::byte_t> current_block;
+        bool compress;
     };
 
 } // namespace bridge::store

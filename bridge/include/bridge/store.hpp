@@ -23,5 +23,6 @@
 
 #include "bridge/store/store.hpp"
 #include "bridge/store/writer.hpp"
+#include "bridge/store/reader.hpp"
 
 #endif

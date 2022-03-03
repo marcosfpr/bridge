@@ -25,10 +25,6 @@ TEST(TestDirectory, TestRamDirectory) {
 
         write_file->write(byte, 5);
 
-//        for (auto& value : float_vec) {
-//            bridge::serialization::marshall(*write_file, value); // why does this not work?
-//        }
-
         write_file->flush();
 
     }

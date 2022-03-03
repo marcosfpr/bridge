@@ -24,6 +24,8 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <variant>
+#include <iterator>
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -77,10 +79,12 @@ namespace bridge::serialization {
     concept Primitive = std::is_integral_v<T> || std::is_arithmetic_v<T> || std::is_enum_v<T> ||
         std::is_same_v<T, bool> || std::is_convertible_v<T, char>;
 
-    // Concepts for containers of T and const T
+    // Concepts for arrays of T and const T
+    // Or if T is a vector of Serializable types
     template <typename T>
-    concept PrimitiveContainer =
+    concept PrimitiveArray =
         (std::is_array_v<T> && Primitive<std::remove_all_extents_t<T>>) || std::is_same_v<T, std::string>;
+
 
     // Concepts for a class member function serialize
     template <typename T>
@@ -110,22 +114,27 @@ namespace bridge::serialization {
         {t.serialize(std::declval<input_archive &>())};
     };
 
-    // Concept for a variant of three serializable types
+    // Concepts for a native C++ Array of Serializable type
     template <typename T>
-    concept SerializableConcrete =  Primitive<T> || PrimitiveContainer<T> || MemberFunctionSerialize<T> ||
-        GlobalFunctionSerialize<T> || PointerToSerializable<T> || ReferenceToSerializable<T>;
-
-    // Concept for a variant of two serializable types
-    template <typename T>
-    concept VariantOfTwoSerializable = SerializableConcrete<std::variant_alternative_t<0, T>> &&
-        SerializableConcrete<std::variant_alternative_t<1, T>>;
+    concept SerializableContainer =
+        Primitive<typename std::iterator_traits<T>::value_type> ||
+        PrimitiveArray<typename std::iterator_traits<T>::value_type> ||
+        MemberFunctionSerialize<typename std::iterator_traits<T>::value_type> ||
+        GlobalFunctionSerialize<typename std::iterator_traits<T>::value_type> ||
+        PointerToSerializable<typename std::iterator_traits<T>::value_type> ||
+        ReferenceToSerializable<typename std::iterator_traits<T>::value_type>;
 
     // Concept for a Serializable type
     template <typename T>
-    concept Serializable = SerializableConcrete<T> || VariantOfTwoSerializable<T>;
+    concept Serializable =  Primitive<T> || PrimitiveArray<T> || SerializableContainer<T> ||
+        MemberFunctionSerialize<T> || GlobalFunctionSerialize<T> || PointerToSerializable<T> ||
+        ReferenceToSerializable<T>;
+
+    template <typename T>
+    concept Deserializable = Serializable<T> && std::is_default_constructible_v<T>;
 
     //! \brief Safe serialization of the text indexing option.
-    template <Serializable T> [[maybe_unused]] uint64_t marshall(std::ostream &os, T &&obj) {
+    template <class T> [[maybe_unused]] uint64_t marshall(std::ostream &os, T &&obj) {
         try {
             output_archive oa(os);
             oa << obj;
@@ -136,7 +145,7 @@ namespace bridge::serialization {
     }
 
     //! \brief Safe unmarshall of whatever type T is.
-    template <Serializable T> [[maybe_unused]] static T unmarshall(std::istream &is) {
+    template <class T> [[maybe_unused]] T unmarshall(std::istream &is) {
         try {
             input_archive ia(is);
             T obj;
@@ -150,10 +159,35 @@ namespace bridge::serialization {
     }
 
     //! \brief Safe unmarshall of whatever type T is.
-    template <Serializable T> [[maybe_unused]] static T unmarshall(std::stringstream& raw_stream) {
+    template <Deserializable T> [[maybe_unused]] static T unmarshall(std::stringstream& raw_stream) {
         std::vector<T> unmarshalled;
         try {
             input_archive ia(raw_stream);
+            T obj;
+            // read sequence of arguments passed as parameter
+            ia >> obj;
+            // return T constructed from the arguments.
+            return obj;
+        } catch (std::exception &e) {
+            throw serialization_error("Failed to unmarshall: " + std::string(e.what()));
+        }
+    }
+
+    //! \brief Safe serialization of the variant types.
+    template <Serializable T, Serializable U> [[maybe_unused]] uint64_t marshall_v(std::ostream &os, std::variant<T, U> &obj) {
+        try {
+            output_archive oa(os);
+            oa << obj;
+            return sizeof(obj);
+        } catch (std::exception &e) {
+            throw serialization_error("Failed to marshall: " + std::string(e.what()));
+        }
+    }
+
+    //! \brief Safe unmarshall of variant types.
+    template <Deserializable T, Deserializable U> [[maybe_unused]] static std::variant<T,U> unmarshall_v(std::istream &is) {
+        try {
+            input_archive ia(is);
             T obj;
             // read sequence of arguments passed as parameter
             ia >> obj;
