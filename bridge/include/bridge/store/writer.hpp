@@ -26,7 +26,6 @@
 #include "bridge/directory/directory.hpp"
 #include "bridge/schema/field.hpp"
 #include "bridge/store/store.hpp"
-#include "bridge/common/serialization.hpp"
 
 namespace bridge::store {
 
@@ -42,7 +41,7 @@ namespace bridge::store {
          */
         explicit store_writer(WriterPtr<Device> writer, bool compress = true)
             : offsets(), intermediary_buffer(), current_block(), doc_id(), written(), compress(compress) {
-            this->writer = writer;
+            this->writer = std::move(writer);
             this->doc_id = 0;
             this->written = 0;
         }
@@ -54,7 +53,7 @@ namespace bridge::store {
             this->offsets.clear();
             this->intermediary_buffer.clear();
             this->current_block.clear();
-            this->writter->flush(); // should i close?
+            this->writer->flush(); // should i close?
         }
 
         /**
@@ -73,16 +72,6 @@ namespace bridge::store {
          */
         void close();
 
-        /**
-         * @brief Serialize a field.
-         * @tparam Archive Archive type.
-         * @param ar Archive object.
-         * @param version Current version of the field.
-         */
-        template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
-
-        }
-        friend boost::serialization::access; //! Allow to access the private members of field.
 
       protected:
 

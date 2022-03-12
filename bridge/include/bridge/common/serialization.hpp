@@ -23,19 +23,21 @@
 
 #include <fstream>
 #include <iostream>
-#include <vector>
-#include <variant>
 #include <iterator>
+#include <variant>
+#include <vector>
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/split_member.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/serialization/version.hpp>
 
 #include <nlohmann/json.hpp>
 
 #include "bridge/error.hpp"
+#include "bridge/common/std_variant_serialization.hpp"
 
 #define BRIDGE_SERIALIZE_VERSION(T, N) BOOST_CLASS_VERSION(T, N)
 #define BRIDGE_SERIALIZATION_SPLIT() BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -85,7 +87,6 @@ namespace bridge::serialization {
     concept PrimitiveArray =
         (std::is_array_v<T> && Primitive<std::remove_all_extents_t<T>>) || std::is_same_v<T, std::string>;
 
-
     // Concepts for a class member function serialize
     template <typename T>
     concept MemberFunctionSerialize = requires(T &t) {
@@ -98,6 +99,16 @@ namespace bridge::serialization {
     concept GlobalFunctionSerialize = requires(T &t) {
         {serialize(std::declval<output_archive &>(), t)};
         {serialize(std::declval<input_archive &>(), t)};
+    }
+    or requires(T &t, const unsigned int version) {
+        {serialize(std::declval<output_archive &>(), t, std::declval<const unsigned int>(), version)};
+        {serialize(std::declval<input_archive &>(), t, std::declval<const unsigned int>(), version)};
+    }
+    or requires(T &t, const unsigned int version) {
+        {boost::serialization::serialize(std::declval<output_archive &>(), t, std::declval<const unsigned int>(),
+                                         version)};
+        {boost::serialization::serialize(std::declval<input_archive &>(), t, std::declval<const unsigned int>(),
+                                         version)};
     };
 
     // Concepts for a pointer to a Serializable type
@@ -114,21 +125,10 @@ namespace bridge::serialization {
         {t.serialize(std::declval<input_archive &>())};
     };
 
-    // Concepts for a native C++ Array of Serializable type
-    template <typename T>
-    concept SerializableContainer =
-        Primitive<typename std::iterator_traits<T>::value_type> ||
-        PrimitiveArray<typename std::iterator_traits<T>::value_type> ||
-        MemberFunctionSerialize<typename std::iterator_traits<T>::value_type> ||
-        GlobalFunctionSerialize<typename std::iterator_traits<T>::value_type> ||
-        PointerToSerializable<typename std::iterator_traits<T>::value_type> ||
-        ReferenceToSerializable<typename std::iterator_traits<T>::value_type>;
-
     // Concept for a Serializable type
     template <typename T>
-    concept Serializable =  Primitive<T> || PrimitiveArray<T> || SerializableContainer<T> ||
-        MemberFunctionSerialize<T> || GlobalFunctionSerialize<T> || PointerToSerializable<T> ||
-        ReferenceToSerializable<T>;
+    concept Serializable = Primitive<T> || PrimitiveArray<T> || MemberFunctionSerialize<T> ||
+        GlobalFunctionSerialize<std::remove_all_extents_t<T>> || PointerToSerializable<T> || ReferenceToSerializable<T>;
 
     template <typename T>
     concept Deserializable = Serializable<T> && std::is_default_constructible_v<T>;
@@ -159,7 +159,7 @@ namespace bridge::serialization {
     }
 
     //! \brief Safe unmarshall of whatever type T is.
-    template <Deserializable T> [[maybe_unused]] static T unmarshall(std::stringstream& raw_stream) {
+    template <class T> [[maybe_unused]] static T unmarshall(std::stringstream &raw_stream) {
         std::vector<T> unmarshalled;
         try {
             input_archive ia(raw_stream);
@@ -174,7 +174,7 @@ namespace bridge::serialization {
     }
 
     //! \brief Safe serialization of the variant types.
-    template <Serializable T, Serializable U> [[maybe_unused]] uint64_t marshall_v(std::ostream &os, std::variant<T, U> &obj) {
+    template <class T, class U> [[maybe_unused]] uint64_t marshall_v(std::ostream &os, std::variant<T, U> &obj) {
         try {
             output_archive oa(os);
             oa << obj;
@@ -185,7 +185,7 @@ namespace bridge::serialization {
     }
 
     //! \brief Safe unmarshall of variant types.
-    template <Deserializable T, Deserializable U> [[maybe_unused]] static std::variant<T,U> unmarshall_v(std::istream &is) {
+    template <class T, class U> [[maybe_unused]] static std::variant<T, U> unmarshall_v(std::istream &is) {
         try {
             input_archive ia(is);
             T obj;

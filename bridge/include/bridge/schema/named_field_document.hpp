@@ -23,7 +23,6 @@
 
 #include <memory>
 #include <string>
-#include <variant>
 #include <vector>
 
 #include "bridge/common/serialization.hpp"

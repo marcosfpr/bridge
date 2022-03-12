@@ -17,13 +17,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 //  IN THE SOFTWARE.
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "UnconstrainedVariableType"
-#pragma ide diagnostic ignored "modernize-use-auto"
-#pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
-
 #include "bridge/store/store.hpp"
 #include "bridge/store/reader.hpp"
+
+#include "bridge/directory/error.hpp"
 #include "bridge/directory/directory.hpp"
 
 #include "bridge/compression/lz4xx.h"
@@ -38,19 +35,22 @@ namespace bridge::store {
         // the first offset is implicitly (0, 0)
         this->offsets_.emplace_back(offset_index(0, 0));
 
-        // todo: possibly i can optimize this.
-        std::vector<bridge::byte_t> raw(this->source_->deref(), this->source_->deref() + this->source_->size());
-        ArrayDevice device(raw);
-        ArrayReader reader(device); // cursor
+        ArraySource source(this->source_->deref(), this->source_->deref() + this->source_->size());
+        ArrayReader reader(source); // cursor
 
         // read the header and the offsets at the end of the stream
-        reader.seekg(sizeof(size_t), std::ios_base::end);
+        reader.seekg(this->source_->size() - sizeof(size_t) - 40, std::ios_base::beg);
+        // todo: eu preciso fazer seeks, mas este modelo atual não permite porque a forma de serialização
+        // produz um overhead indeterminado para cada item serializado.
+
+        // check ios_state
+        if (reader.fail()) {
+            throw io_error("Failed to seek from the end of the stream");
+        }
 
         // unmarshall the header
         auto written = bridge::serialization::unmarshall<size_t>(reader);
-        if (written != sizeof(size_t)) {
-            throw bridge::bridge_error("invalid header");
-        }
+        std::cout << "Read written bytes: " << written << std::endl;
 
         // go back to start of the stream
         reader.seekg(0, std::ios_base::beg);
@@ -87,19 +87,17 @@ namespace bridge::store {
 
         auto total_buffer = this->source_->deref();
 
-        // todo: possibly i can optimize this.
         std::vector<bridge::byte_t> raw(total_buffer, total_buffer + this->source_->size());
-        ArrayDevice device(raw);
-        ArrayReader reader(device); // cursor
+        ArraySource source(raw.data(), raw.size());
+        ArrayReader reader(source); // cursor
 
         reader.seekg(block_offset, std::ios_base::beg); // go to block offset
 
         // unmarshall the block
         size_t block_length = bridge::serialization::unmarshall<size_t>(reader); // read the block length
-        // todo: add a check for compression
         std::vector<bridge::byte_t> compressed_block = bridge::serialization::unmarshall<std::vector<bridge::byte_t>>(reader);
 
-        // check the sizes
+        // check the sizes''
         if (compressed_block.size() != block_length) {
             throw bridge::bridge_error("Invalid block deserialization");
         }
@@ -124,8 +122,8 @@ namespace bridge::store {
         try  {
             this->read_block(offset_idx.get_offset());
             // todo: possibly i can optimize this.
-            ArrayDevice device(*this->current_block_);
-            ArrayReader reader(device); // cursor
+            ArraySource source(this->current_block_->data(), this->current_block_->size());
+            ArrayReader reader(source); // cursor
 
             // shift the cursor to the right position
             for (size_t i = offset_idx.get_doc_id(); i < doc_id; i++) {
@@ -157,4 +155,3 @@ namespace bridge::store {
     }
 
 }
-#pragma clang diagnostic pop
