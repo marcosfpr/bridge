@@ -134,11 +134,14 @@ namespace bridge::serialization {
     concept Deserializable = Serializable<T> && std::is_default_constructible_v<T>;
 
     //! \brief Safe serialization of the text indexing option.
+    //! \warning Array devices returns zero.
     template <class T> [[maybe_unused]] uint64_t marshall(std::ostream &os, T &&obj) {
         try {
             output_archive oa(os);
+            auto start = os.tellp();
             oa << obj;
-            return sizeof(obj);
+            auto end = os.tellp();
+            return end - start;
         } catch (std::exception &e) {
             throw serialization_error("Failed to marshall: " + std::string(e.what()));
         }
@@ -177,8 +180,10 @@ namespace bridge::serialization {
     template <class T, class U> [[maybe_unused]] uint64_t marshall_v(std::ostream &os, std::variant<T, U> &obj) {
         try {
             output_archive oa(os);
+            auto start = os.tellp();
             oa << obj;
-            return sizeof(obj);
+            auto end = os.tellp();
+            return end - start;
         } catch (std::exception &e) {
             throw serialization_error("Failed to marshall: " + std::string(e.what()));
         }

@@ -19,6 +19,7 @@
 //  IN THE SOFTWARE.
 
 #include "bridge/store/writer.hpp"
+#include "bridge/directory/devices.hpp"
 #include "bridge/compression/lz4xx.h"
 
 #define BLOCK_SIZE 16384
@@ -68,9 +69,15 @@ namespace bridge::store {
 
             size_t final_size = this->intermediary_buffer.size();
 
-            std::cout << "Writing " << final_size + sizeof(final_size) << " bytes to the Device" << std::endl;
-            this->written += bridge::serialization::marshall(*writer, final_size); // todo: maybe we don't need to marshall this
+            std::cout << "Writing " << final_size  << " bytes to the Device" << std::endl;
             this->written += bridge::serialization::marshall(*writer, this->intermediary_buffer);
+
+            // Array devices doesn't return a correct written size. We need to calculate it.
+            if (bridge::directory::is_array_device<Device>::value) {
+                Writer<Device> x = *writer;
+                auto a = *x;
+            }
+
             std::cout << "Written " <<  final_size + sizeof(final_size) << " bytes to the Device" << std::endl;
 
             this->offsets.push_back(offset_index(this->doc_id, this->written));
@@ -97,7 +104,10 @@ namespace bridge::store {
                   " + " << sizeof(header_offset) << " + " << sizeof(offset_index) * this->offsets.size() << std::endl;
         }
 
-
+        /**
+         * @brief Write field_values to intermediary array buffer.
+         * @warning We must take careful with the marshalling size which will be zero.
+         */
         template <class Device> void store_writer<Device>::write_on_intermediary_buffer(std::vector<field_v> &fields) {
             // write field_values to intermediary buffer
             ArrayDevice device(this->intermediary_buffer);

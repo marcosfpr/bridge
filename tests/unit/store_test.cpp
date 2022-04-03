@@ -78,4 +78,27 @@ TEST(StoreTest, TestWriteRead) {
 
 }
 
-// todo: benchmarks
+TEST(SerializeTest,  SizeOf) {
+    using namespace bridge::store;
+
+    // temporary path
+    std::filesystem::path tmp_path =  std::filesystem::temp_directory_path() / "tmp_test";
+
+    // delete the file if it exists
+    if (std::filesystem::exists(tmp_path)) {
+        std::filesystem::remove(tmp_path);
+    }
+
+    // create a RAMDirectory
+    auto ram = RAMDirectory();
+
+    auto writer = ram.open_write(tmp_path);
+
+    std::vector<bridge::byte_t> data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+//    auto length =  bridge::serialization::marshall(*writer, data);
+
+    auto reader = ram.open_read(tmp_path);
+    ASSERT_EQ(reader->size(), data.size());
+
+}

@@ -33,6 +33,7 @@
 #include "bridge/global.hpp"
 #include "bridge/directory/error.hpp"
 #include "bridge/directory/read_only_source.hpp"
+#include "bridge/directory/devices.hpp"
 
 namespace bridge::directory {
 
@@ -41,8 +42,8 @@ namespace bridge::directory {
     template<typename Device> using Writer = boost::iostreams::stream<Device>;
     template<typename Source> using Reader = boost::iostreams::stream<Source>;
 
-    using FileDevice = boost::iostreams::basic_file_sink<bridge::byte_t>;
-    using ArrayDevice = boost::iostreams::back_insert_device<std::vector<bridge::byte_t>>;
+    using FileDevice = file_sink_device<bridge::byte_t>; // Marshall funciona
+    using ArrayDevice = back_insert_vector<bridge::byte_t>; // Marshall volta 0 -> preciso acessar o  vector writer para saber o size.
 
     using FileSource = boost::iostreams::basic_file_source<bridge::byte_t>;
     using ArraySource = boost::iostreams::array_source;
