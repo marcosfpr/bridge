@@ -205,11 +205,10 @@ namespace bridge::schema {
          * @param version Current version of object.
          */
         template <class Archive>
-        [[maybe_unused]] void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
-            ar &_index_options;
+        [[maybe_unused]] void serialize(Archive &ar) {
+            ar(_index_options);
         }
-
-        friend boost::serialization::access; //! Allow to access the private members of text_indexing_option.
+        friend class cereal::access;
 
       private:
         /**
@@ -353,12 +352,10 @@ namespace bridge::schema {
          * @param ar Archive object.
          * @param version Current object version.
          */
-        template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
-            ar &indexing_options;
-            ar &stored;
+        template <class Archive> void serialize(Archive &ar) {
+            ar(indexing_options, stored);
         }
-
-        friend boost::serialization::access; //! Allow to access the private members of text_field.
+        friend class cereal::access;
 
         /**
          * @brief Convert a text_field to a JSON object.
@@ -491,19 +488,16 @@ namespace bridge::schema {
          */
         [[maybe_unused]] void set_stored(bool is_stored);
 
-        friend class boost::serialization::access; //! < Allow serialization.
-
         /**
          * @brief Serialize the numeric_field.
          * @tparam Archive Input/Output archive.
          * @param ar Archive object.
          * @param version Current version of the serialized data.
          */
-        template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
-            ar &indexed;
-            ar &fast;
-            ar &stored;
+        template <class Archive> void serialize(Archive &ar) {
+            ar(indexed, fast, stored);
         }
+        friend class cereal::access;
 
         /**
          * @brief Convert the numeric_field to a JSON
