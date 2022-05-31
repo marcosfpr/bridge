@@ -25,24 +25,26 @@
 #include <iostream>
 #include <vector>
 
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/split_member.hpp>
-#include <boost/serialization/version.hpp>
-
 #include <nlohmann/json.hpp>
 
-#include "bridge/error.hpp"
+#include <cereal/cereal.hpp>
+#include <cereal/access.hpp>
+#include <cereal/archives/binary.hpp>
+#include <cereal/details/traits.hpp>
 
-#define BRIDGE_SERIALIZE_VERSION(T, N) BOOST_CLASS_VERSION(T, N)
-#define BRIDGE_SERIALIZATION_SPLIT() BOOST_SERIALIZATION_SPLIT_MEMBER()
+#include <cereal/types/map.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
+
+#include "bridge/common/archives.hpp"
+#include "bridge/global.hpp"
+#include "bridge/error.hpp"
 
 namespace bridge::serialization {
 
     // Type aliases to make the code more readable.
-    using output_archive = boost::archive::binary_oarchive;
-    using input_archive = boost::archive::binary_iarchive;
+    using output_archive = bridge::archive::BinaryOutput;
+    using input_archive = bridge::archive::BinaryInput;
 
     using json_t = nlohmann::ordered_json;
 
@@ -68,9 +70,6 @@ namespace bridge::serialization {
     // it is a pointer to a Serializable type.
     // it is a reference to a Serializable type.
     // it is a native C++ Array of Serializable type.
-    // For more information, please refer to the following link:
-    // https://www.boost.org/doc/libs/1_72_0/libs/serialization/doc/tutorial.html
-    // https://www.boost.org/doc/libs/1_72_0/libs/serialization/doc/serialization.html
 
     // Concepts for primitive types
     template <typename T>
@@ -85,8 +84,8 @@ namespace bridge::serialization {
     // Concepts for a class member function serialize
     template <typename T>
     concept MemberFunctionSerialize = requires(T &t) {
-        {t.serialize(std::declval<output_archive &>(), std::declval<const unsigned int>())};
-        {t.serialize(std::declval<input_archive &>(), std::declval<const unsigned int>())};
+        {t.serialize(std::declval<output_archive&>())};
+        {t.serialize(std::declval<input_archive &>())};
     };
 
     // Concepts for a global function serialize
@@ -116,23 +115,23 @@ namespace bridge::serialization {
         GlobalFunctionSerialize<T> || PointerToSerializable<T> || ReferenceToSerializable<T>;
 
     //! \brief Safe serialization of the text indexing option.
-    template <Serializable T> [[maybe_unused]] uint64_t marshall(std::ostream &os, T &&obj) {
+    template <class T> [[maybe_unused]] uint64_t marshall(std::ostream &os, T &&obj) {
         try {
             output_archive oa(os);
-            oa << obj;
-            return sizeof(obj);
+            oa(obj);
+            return oa.totalWritten();
         } catch (std::exception &e) {
             throw serialization_error("Failed to marshall: " + std::string(e.what()));
         }
     }
 
     //! \brief Safe unmarshall of whatever type T is.
-    template <Serializable T> [[maybe_unused]] static T unmarshall(std::istream &is) {
+    template <class T> [[maybe_unused]] static T unmarshall(std::istream &is) {
         try {
             input_archive ia(is);
             T obj;
             // read sequence of arguments passed as parameter
-            ia >> obj;
+            ia(obj);
             // return T constructed from the arguments.
             return obj;
         } catch (std::exception &e) {
@@ -141,17 +140,28 @@ namespace bridge::serialization {
     }
 
     //! \brief Safe unmarshall of whatever type T is.
-    template <Serializable T> [[maybe_unused]] static T unmarshall(std::stringstream& raw_stream) {
+    template <class T> [[maybe_unused]] static T unmarshall(std::stringstream& raw_stream) {
         std::vector<T> unmarshalled;
         try {
             input_archive ia(raw_stream);
             T obj;
             // read sequence of arguments passed as parameter
-            ia >> obj;
+            ia(obj);
             // return T constructed from the arguments.
             return obj;
         } catch (std::exception &e) {
             throw serialization_error("Failed to unmarshall: " + std::string(e.what()));
+        }
+    }
+
+    //! \brief Safe unmarshall of whatever type T is.
+    template <class T> [[maybe_unused]] static uint64_t marshall(std::stringstream& raw_stream, T &&obj) {
+        try {
+            output_archive oa(raw_stream);
+            oa(obj);
+            return raw_stream.width();
+        } catch (std::exception &e) {
+            throw serialization_error("Failed to marshall: " + std::string(e.what()));
         }
     }
 

@@ -157,11 +157,38 @@ TEST(FieldTest, Field) {
     EXPECT_EQ(f1.hash(), field<unsigned int>(0, 1203).hash());
 }
 
+TEST(FieldTest, Marshalling) {
+    using namespace bridge::serialization;
+    // create temporary binary file
+
+    std::vector<bridge::byte_t> buf;
+    bridge::directory::ArrayDevice device(buf);
+    bridge::directory::ArrayWriter writer(device);
+
+    std::string foo("Hello, World!");
+    size_t size = 0;
+    {
+        size = marshall(writer, foo);
+        ASSERT_TRUE(size > 0);
+    }
+    writer.close();
+
+    ASSERT_EQ(size, buf.size());
+    bridge::directory::ArraySource source(buf.data(),  buf.size());
+    bridge::directory::ArrayReader reader(source);
+
+    {
+        auto deserialized_value = unmarshall<std::string>(reader);
+        std::cout << "Deserialized: " << deserialized_value << std::endl;
+        ASSERT_EQ(deserialized_value, foo);
+    }
+}
+
 TEST(FieldTest, FieldMarshall) {
     using namespace bridge::schema;
 
-    field f1 = field<unsigned int>(0, 23);
-    field f2 = field<std::string>(1, "foo");
+    field<unsigned int> f1 = field<unsigned int>(0, 23);
+    field<std::string> f2 = field<std::string>(1, "foo");
 
     // create temporary binary file
     std::string tmp_file_name = "./tmp_file";
@@ -171,12 +198,11 @@ TEST(FieldTest, FieldMarshall) {
     unsigned long total_bytes_write = 0L;
     {
         using namespace bridge::serialization;
-
         total_bytes_write += marshall(tmp_file, f1);
         total_bytes_write += marshall(tmp_file, f2);
     }
 
-    ASSERT_EQ(total_bytes_write, sizeof(f1) + sizeof(f2));
+    ASSERT_TRUE(total_bytes_write > 0);
 
     tmp_file.close();
     tmp_file.open(tmp_file_name, std::ios::in | std::ios::binary);
@@ -185,11 +211,11 @@ TEST(FieldTest, FieldMarshall) {
     {
         using namespace bridge::serialization;
 
-        Serializable auto deserialized_numeric_option = unmarshall<field<unsigned int>>(tmp_file);
+        auto deserialized_numeric_option = unmarshall<field<unsigned int>>(tmp_file);
         ASSERT_EQ(f1, deserialized_numeric_option);
         ASSERT_EQ(f1.get_value().value(), deserialized_numeric_option.get_value().value());
 
-        Serializable auto deserialized_str_option = unmarshall<field<std::string>>(tmp_file);
+        auto deserialized_str_option = unmarshall<field<std::string>>(tmp_file);
         ASSERT_EQ(f2, deserialized_str_option);
         ASSERT_EQ(f2.get_value().value(), deserialized_str_option.get_value().value());
 

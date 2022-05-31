@@ -131,17 +131,14 @@ namespace bridge::schema {
             return field<U>(field_id, *value);
         }
 
-         /**
+        /**
          * @brief Serialize a field.
          * @tparam Archive Archive type.
          * @param ar Archive object.
          * @param version Current version of the field.
          */
-        template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
-            ar & id;
-            ar & value;
-        }
-        friend boost::serialization::access; //! Allow to access the private members of field.            
+        template <class Archive> void serialize(Archive &ar) { ar(id, value); }
+        friend class cereal::access;
 
         /**
          * @brief Hash the field.

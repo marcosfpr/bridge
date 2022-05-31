@@ -112,18 +112,16 @@ namespace bridge::schema {
         [[maybe_unused]] static field_value create(std::string value) { return field_value(std::move(value)); }
 
         /// \brief Serialization of field value it's trivial
-        friend class boost::serialization::access;
         /**
          * @brief Serialization of field value.
          * @tparam Archive Archive type.
          * @param ar Archive object.
          * @param version Current version of the object.
          */
-        template <class Archive> void serialize(Archive &ar, [[maybe_unused]] const unsigned int version) {
-            ar &_value;
+        template <class Archive> void serialize(Archive &ar) {
+            ar(_value);
         }
-
-        friend boost::serialization::access; //! Allow to access the private members of field_value.
+        friend class cereal::access;
 
       private:
         V _value;
