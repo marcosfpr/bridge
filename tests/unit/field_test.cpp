@@ -157,33 +157,6 @@ TEST(FieldTest, Field) {
     EXPECT_EQ(f1.hash(), field<unsigned int>(0, 1203).hash());
 }
 
-TEST(FieldTest, Marshalling) {
-    using namespace bridge::serialization;
-    // create temporary binary file
-
-    std::vector<bridge::byte_t> buf;
-    bridge::directory::ArrayDevice device(buf);
-    bridge::directory::ArrayWriter writer(device);
-
-    std::string foo("Hello, World!");
-    size_t size = 0;
-    {
-        size = marshall(writer, foo);
-        ASSERT_TRUE(size > 0);
-    }
-    writer.close();
-
-    ASSERT_EQ(size, buf.size());
-    bridge::directory::ArraySource source(buf.data(),  buf.size());
-    bridge::directory::ArrayReader reader(source);
-
-    {
-        auto deserialized_value = unmarshall<std::string>(reader);
-        std::cout << "Deserialized: " << deserialized_value << std::endl;
-        ASSERT_EQ(deserialized_value, foo);
-    }
-}
-
 TEST(FieldTest, FieldMarshall) {
     using namespace bridge::schema;
 

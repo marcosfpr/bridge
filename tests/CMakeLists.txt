@@ -4,16 +4,17 @@
 find_package(Threads REQUIRED)
 
 add_executable(
-  test_bridge
-  main.cpp
-  unit/analyzer_test.cpp
-  unit/schema_options_test.cpp
-  unit/field_test.cpp
-  unit/term_test.cpp
-  unit/document_test.cpp
-  unit/named_field_document_test.cpp
-  unit/schema_test.cpp
-  unit/directory_test.cpp
+        test_bridge
+        main.cpp
+        unit/analyzer_test.cpp
+        unit/schema_options_test.cpp
+        unit/field_test.cpp
+        unit/term_test.cpp
+        unit/document_test.cpp
+        unit/named_field_document_test.cpp
+        unit/schema_test.cpp
+        unit/directory_test.cpp
+        unit/store_test.cpp
 )
 
 # add_executable(

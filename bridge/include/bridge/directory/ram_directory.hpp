@@ -32,7 +32,7 @@ namespace bridge::directory {
     /// @brief A cache directory that stores data in RAM.
     typedef std::map<Path, std::vector<bridge::byte_t>> ram_cache_t;
 
-    class RAMDirectory : public Directory<ArrayDevice> {
+    class RAMDirectory : public Directory<ArrayDevice, ArraySource> {
       public:
 
         /**
@@ -61,9 +61,10 @@ namespace bridge::directory {
          * Specifically, subsequent write or flush should have  no effect in the object.
          * @return read_only_source Read only source.
          */
-        [[nodiscard]] std::shared_ptr<read_only_source> open_read(const Path& path) const override {
+        [[nodiscard]] std::shared_ptr<read_only_source> source(const Path& path) const override {
 
             // Lock that allows to read the cache
+            // todo: useless i think
             std::shared_lock lock(mutex_);
 
             // Check if the file is in the cache
@@ -98,7 +99,7 @@ namespace bridge::directory {
          * @return Writer.
          */
         [[nodiscard]] std::unique_ptr<ArrayWriter> open_write(const Path& path) override {
-            std::unique_lock lock(mutex_);
+            // std::unique_lock lock(mutex_);
 
             // Check if the file is in the cache
             auto it = ram_cache_.find(path);
@@ -114,6 +115,27 @@ namespace bridge::directory {
             std::unique_ptr<ArrayWriter> writer = std::make_unique<ArrayWriter>(device);
 
             return writer;
+        }
+
+        /**
+         * @brief Opens a virtual file for read.
+         * @return Reader.
+         */
+        [[nodiscard]] std::shared_ptr<ArrayReader> open_read(const Path& path) override {
+            // std::unique_lock lock(mutex_);
+
+            // Check if the file is in the cache
+            auto it = ram_cache_.find(path);
+            if (it == ram_cache_.end()) {
+                throw file_error("File doesn't exists:" + path.string());
+            }
+
+            // open file  for write
+            std::vector<bridge::byte_t>* data = &it->second;
+            ArraySource source(data->data(), data->size());
+            std::shared_ptr<ArrayReader> reader = std::make_shared<ArrayReader>(source);
+
+            return reader;
         }
 
         /**

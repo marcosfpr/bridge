@@ -10,6 +10,10 @@ set(
         src/bridge/schema/term.cpp
         src/bridge/schema/document.cpp
         src/bridge/schema/schema.cpp
+        src/bridge/compression/lz4.cpp
+        src/bridge/compression/lz4xx.cpp
+        src/bridge/store/reader.cpp
+        src/bridge/store/writer.cpp
 )
     
 add_library(

@@ -1,0 +1,151 @@
+// Copyright (c) 2021 Bridge Project (Marcos Pontes)
+
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to
+//  deal in the Software without restriction, including without limitation the
+//  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+//  sell copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+//  IN THE SOFTWARE.
+#include "bridge/store/store.hpp"
+#include "bridge/store/reader.hpp"
+
+#include "bridge/directory/error.hpp"
+#include "bridge/directory/directory.hpp"
+
+#include "bridge/compression/lz4xx.hpp"
+
+
+namespace bridge::store {
+
+    void store_reader::read_header() {
+        using namespace bridge::store;
+        using namespace bridge::directory;
+
+        // the first offset is implicitly (0, 0)
+        this->offsets_.emplace_back(offset_index(0, 0));
+
+        ArraySource source(this->source_->deref(), this->source_->deref() + this->source_->size());
+        ArrayReader reader(source); // cursor
+
+        // read the header and the offsets at the end of the stream
+        reader.seekg(this->source_->size() - sizeof(size_t), std::ios_base::beg);
+
+        // check ios_state
+        if (reader.fail()) {
+            throw io_error("Failed to seek from the end of the stream");
+        }
+
+        // unmarshall the header
+        auto written = bridge::serialization::unmarshall<size_t>(reader);
+        std::cout << "Read written bytes: " << written << std::endl;
+
+        // go back to start of the stream
+        reader.seekg(0, std::ios_base::beg);
+
+        // seek to written bytes
+        reader.seekg(written, std::ios_base::beg);
+
+        // unmarshall the offsets
+        auto idx_offsets = bridge::serialization::unmarshall<std::vector<offset_index>>(reader);
+        this->offsets_.insert(this->offsets_.end(), idx_offsets.begin(), idx_offsets.end());
+
+        reader.close();
+    }
+
+    offset_index store_reader::block_offset(doc_id_t id) {
+        for (auto & offset : this->offsets_) {
+            std::cout << "( " << offset.get_doc_id() << ", " << offset.get_offset() << " )" << std::endl;
+        }
+        std::cout << "this id: " << id << std::endl;
+        // binary search over the offsets to find the block
+        auto it = std::lower_bound(this->offsets_.begin(), this->offsets_.end(), id, [](const offset_index& a, doc_id_t b) {
+            return a.get_doc_id() < b;
+        });
+
+        if (it == this->offsets_.end() || id > it->get_doc_id()) {
+            throw bridge::bridge_error("Invalid doc_id: too high id.");
+        }
+
+        return *it;
+    }
+    void store_reader::read_block(uint64_t block_offset) {
+        // careful here
+        this->current_block_.clear();
+        auto total_buffer = this->source_->deref();
+
+        std::vector<bridge::byte_t> raw(total_buffer, total_buffer + this->source_->size());
+        ArraySource source(raw.data(), raw.size());
+        ArrayReader reader(source); // cursor
+
+        // todo: narrowing conversion is dangerous here.
+        reader.seekg(block_offset, std::ios_base::beg); // go to block offset
+        std::cout << "shifting " << block_offset << std::endl;
+
+        // unmarshall the block
+        // auto block_length = bridge::serialization::unmarshall<size_t>(reader); // read the block length
+        auto compressed_block = bridge::serialization::unmarshall<std::vector<bridge::byte_t>>(reader);
+        std::cout << "block length: " << compressed_block.size() << std::endl;
+
+        // decompress the block
+        bridge::byte_t  *decompressed_data = nullptr;
+        size_t decompressed_size = 0;
+
+        LZ4Decoder decoder;
+        decoder.open(&decompressed_data, &decompressed_size);
+
+        decoder.decode(compressed_block.data(), compressed_block.size());
+
+        // move decompressed_data to current_block
+        this->current_block_.clear();
+        this->current_block_.insert(this->current_block_.end(), decompressed_data, decompressed_data + decompressed_size);
+
+    }
+    document store_reader::get(doc_id_t doc_id) {
+        auto offset_idx = this->block_offset(doc_id);
+        try  {
+            this->read_block(offset_idx.get_offset());
+
+            ArraySource source(this->current_block_.data(), this->current_block_.size());
+            ArrayReader reader(source); // cursor
+            // todo: create an offset_block type that allows me to shift inside  a block :)
+            // shift the cursor to the right position
+            for (size_t i = offset_idx.get_doc_id(); i < doc_id; i++) {
+                auto block_length = bridge::serialization::unmarshall<size_t>(reader);
+                reader.seekg(block_length, std::ios_base::cur);
+            }
+
+            // read the document
+            bridge::serialization::unmarshall<size_t>(reader); // read the block length
+
+            auto number_fields = bridge::serialization::unmarshall<size_t>(reader);
+            std::vector<field_v> fields;
+            for (size_t i = 0; i < number_fields; i++) {
+                auto field = bridge::serialization::unmarshall<field_v>(reader);
+                fields.push_back(field);
+            }
+
+            return document(std::move(fields));
+        }
+        catch (bridge::bridge_error& e) {
+            throw e;
+        }
+        catch (std::exception& e) {
+            throw bridge::bridge_error(e.what());
+        }
+        catch (...) {
+            throw bridge::bridge_error("Unknown error");
+        }
+    }
+
+}

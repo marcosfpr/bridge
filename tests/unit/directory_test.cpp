@@ -33,7 +33,7 @@ TEST(TestDirectory, TestRamDirectory) {
 
     }
     // read file
-    auto read_file = ram_dir.open_read(temp_file);
+    auto read_file = ram_dir.source(temp_file);
 
     const bridge::byte_t* data_read = read_file->deref();
     auto length = read_file->size();

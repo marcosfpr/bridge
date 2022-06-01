@@ -35,6 +35,7 @@
 #include <cereal/types/map.hpp>
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
+#include <cereal/types/variant.hpp>
 
 #include "bridge/common/archives.hpp"
 #include "bridge/global.hpp"

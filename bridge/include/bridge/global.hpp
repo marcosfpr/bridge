@@ -34,7 +34,7 @@ namespace bridge {
     // as they are added in the segment.
     //
     // At most, a segment can contain 2^31 documents.
-    using DocId = uint32_t;
+    using doc_id_t = uint32_t;
 
 }; // namespace bridge
 

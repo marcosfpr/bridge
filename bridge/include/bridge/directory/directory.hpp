@@ -53,7 +53,6 @@ namespace bridge::directory {
     using FileReader = boost::iostreams::stream<FileSource>;
     using ArrayReader = boost::iostreams::stream<ArraySource>;
 
-
     /**
      * @brief Write-once many read (WORM) abstraction for where bridge's index should be stored.
      *
@@ -61,7 +60,7 @@ namespace bridge::directory {
      * 1. The MMapDirectory, which uses mmap() to map the index into memory.
      * 2. The RAMDirectory, which is a test functionality that stores the index in RAM.
      */
-     template<typename Device>
+     template<typename Device, typename Source>
     class Directory {
       public:
         /**
@@ -82,7 +81,7 @@ namespace bridge::directory {
          * Specifically, subsequent write or flush should have  no effect in the object.
          * @return read_only_source Read only source.
          */
-        [[nodiscard]] virtual std::shared_ptr<read_only_source> open_read(const Path& path) const = 0;
+        [[nodiscard]] virtual std::shared_ptr<read_only_source> source(const Path& path) const = 0;
 
         /**
          * @brief Removes a file
@@ -95,6 +94,13 @@ namespace bridge::directory {
          * @return Writer stream.
          */
         [[nodiscard]] virtual std::unique_ptr<Writer<Device>> open_write(const Path& path) = 0;
+
+
+        /**
+         * @brief Opens a virtual file for write.
+         * @return Writer stream.
+         */
+        [[nodiscard]] virtual std::shared_ptr<Reader<Source>> open_read(const Path& path) = 0;
 
         /**
          * @brief Atomically replace the content  of a file by data.

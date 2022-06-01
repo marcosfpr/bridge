@@ -46,7 +46,7 @@ namespace bridge::directory {
      *  @brief Directory storing data in files, read via mmap.
      *  The mmap object are cached to limit  the system calls.
      */
-    class MMapDirectory : public Directory<FileDevice> {
+    class MMapDirectory : public Directory<FileDevice, FileSource> {
       public:
 
         /**
@@ -122,7 +122,7 @@ namespace bridge::directory {
          * Specifically, subsequent write or flush should have  no effect in the object.
          * @return read_only_source Read only source.
          */
-        [[nodiscard]] std::shared_ptr<read_only_source> open_read(const Path& path) const override {
+        [[nodiscard]] std::shared_ptr<read_only_source> source(const Path& path) const override {
             Path full_path = join(path);
 
             // Lock multiple readers
@@ -193,6 +193,29 @@ namespace bridge::directory {
             writer->flush(); // Make sure the file is created.
 
             return writer;
+        }
+
+        /**
+         * @brief Opens a virtual file for read.
+         * @details Once a file is opened, its data may not be modified.
+         * @return Reader.
+         */
+        [[nodiscard]] std::shared_ptr<FileReader> open_read(const Path& path) override {
+            Path full_path = join(path);
+
+            // Lock single writer
+            std::unique_lock lock(mutex_);
+
+            //  Check if file is valid and open for write
+            if (! std::filesystem::exists(full_path)) {
+                throw file_error("File doesn't exists");
+            }
+
+            // Open the file for writing
+            FileSource source(full_path, std::ios::in | std::ios::binary);
+            std::shared_ptr<FileReader> reader =  std::make_shared<FileReader>(source);
+
+            return reader;
         }
 
         /**
