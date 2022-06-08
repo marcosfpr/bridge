@@ -32,9 +32,6 @@ namespace bridge::store {
         using namespace bridge::store;
         using namespace bridge::directory;
 
-        // the first offset is implicitly (0, 0)
-        this->offsets_.emplace_back(offset_index(0, 0));
-
         ArraySource source(this->source_->deref(), this->source_->deref() + this->source_->size());
         ArrayReader reader(source); // cursor
 
@@ -48,8 +45,9 @@ namespace bridge::store {
 
         // unmarshall the header
         auto written = bridge::serialization::unmarshall<size_t>(reader);
+#ifdef BRIDGE_DEBUG
         std::cout << "Read written bytes: " << written << std::endl;
-
+#endif
         // go back to start of the stream
         reader.seekg(0, std::ios_base::beg);
 
@@ -58,16 +56,24 @@ namespace bridge::store {
 
         // unmarshall the offsets
         auto idx_offsets = bridge::serialization::unmarshall<std::vector<offset_index>>(reader);
-        this->offsets_.insert(this->offsets_.end(), idx_offsets.begin(), idx_offsets.end());
+
+        // insert offsets shift normalization
+        std::uint64_t shifted_offset = 0;
+        for (auto& idx_offset : idx_offsets) {
+            this->offsets_.emplace_back(idx_offset.get_doc_id(), shifted_offset);
+            shifted_offset = idx_offset.get_offset();
+        }
 
         reader.close();
     }
 
     offset_index store_reader::block_offset(doc_id_t id) {
+#ifdef BRIDGE_DEBUG
         for (auto & offset : this->offsets_) {
             std::cout << "( " << offset.get_doc_id() << ", " << offset.get_offset() << " )" << std::endl;
         }
         std::cout << "this id: " << id << std::endl;
+#endif
         // binary search over the offsets to find the block
         auto it = std::lower_bound(this->offsets_.begin(), this->offsets_.end(), id, [](const offset_index& a, doc_id_t b) {
             return a.get_doc_id() < b;
@@ -84,55 +90,92 @@ namespace bridge::store {
         this->current_block_.clear();
         auto total_buffer = this->source_->deref();
 
-        std::vector<bridge::byte_t> raw(total_buffer, total_buffer + this->source_->size());
-        ArraySource source(raw.data(), raw.size());
+        ArraySource source(total_buffer, total_buffer + this->source_->size());
         ArrayReader reader(source); // cursor
 
         // todo: narrowing conversion is dangerous here.
         reader.seekg(block_offset, std::ios_base::beg); // go to block offset
-        std::cout << "shifting " << block_offset << std::endl;
 
         // unmarshall the block
         // auto block_length = bridge::serialization::unmarshall<size_t>(reader); // read the block length
-        auto compressed_block = bridge::serialization::unmarshall<std::vector<bridge::byte_t>>(reader);
-        std::cout << "block length: " << compressed_block.size() << std::endl;
-
-        // decompress the block
-        bridge::byte_t  *decompressed_data = nullptr;
-        size_t decompressed_size = 0;
-
-        LZ4Decoder decoder;
-        decoder.open(&decompressed_data, &decompressed_size);
-
-        decoder.decode(compressed_block.data(), compressed_block.size());
-
-        // move decompressed_data to current_block
-        this->current_block_.clear();
-        this->current_block_.insert(this->current_block_.end(), decompressed_data, decompressed_data + decompressed_size);
+        this->current_block_ = bridge::serialization::unmarshall<std::vector<bridge::byte_t>>(reader);
+#ifdef BRIDGE_DEBUG
+        std::cout << "shifting " << block_offset << std::endl;
+        std::cout << "block length: " << this->current_block_.size() << std::endl;
+#endif
 
     }
+
+    void store_reader::read_block_offsets() {
+        ArraySource source(this->current_block_.data(), this->current_block_.size());
+        ArrayReader reader(source); // cursor
+#ifdef BRIDGE_DEBUG
+        std::cout << "Current block size: " << this->current_block_.size() << std::endl;
+#endif
+
+        // read the header and the offsets at the end of the stream
+        reader.seekg(this->current_block_.size() - sizeof(size_t), std::ios_base::beg);
+
+        // check ios_state
+        if (reader.fail()) {
+            throw io_error("Failed to seek from the end of the stream");
+        }
+
+        // unmarshall the header
+        auto written = bridge::serialization::unmarshall<size_t>(reader);
+
+#ifdef BRIDGE_DEBUG
+        std::cout << "Reading block offsets" << std::endl;
+        std::cout << "Bytes to shift: " << written << std::endl;
+#endif
+
+        // go back to start of the stream
+        reader.seekg(0, std::ios_base::beg);
+
+        // seek to written bytes
+        reader.seekg(written, std::ios_base::beg);
+
+        // unmarshall the offsets
+        // todo: something to check its sanity
+        this->current_block_offsets = bridge::serialization::unmarshall<std::map<doc_id_t, size_t>>(reader);
+
+        // print keys
+#ifdef BRIDGE_DEBUG
+        std::cout << "Current block ids: " << std::endl;
+        for (auto & kv : this->current_block_offsets) {
+            std::cout << kv.first << " ";
+        }
+        std::cout << std::endl;
+#endif
+
+    }
+
     document store_reader::get(doc_id_t doc_id) {
         auto offset_idx = this->block_offset(doc_id);
+#ifdef BRIDGE_DEBUG
+        std::cout << "Looking for doc_id: " << doc_id << std::endl;
+        std::cout << "Found offset: " << offset_idx.get_doc_id() << " " << offset_idx.get_offset() << std::endl;
+#endif
         try  {
-            this->read_block(offset_idx.get_offset());
+            if (offset_idx.get_doc_id() != this->current_offset.get_doc_id() || this->current_block_.empty()){
+                this->read_block(offset_idx.get_offset());
+                this->read_block_offsets();
+            }
+            this->current_offset = offset_idx;
 
             ArraySource source(this->current_block_.data(), this->current_block_.size());
             ArrayReader reader(source); // cursor
-            // todo: create an offset_block type that allows me to shift inside  a block :)
-            // shift the cursor to the right position
-            for (size_t i = offset_idx.get_doc_id(); i < doc_id; i++) {
-                auto block_length = bridge::serialization::unmarshall<size_t>(reader);
-                reader.seekg(block_length, std::ios_base::cur);
-            }
 
-            // read the document
-            bridge::serialization::unmarshall<size_t>(reader); // read the block length
+            // get the offset given the doc_id
+            auto doc_shift = this->current_block_offsets.at(doc_id);
+
+            reader.seekg(doc_shift, std::ios_base::beg); // todo: change type of variables to avoid this
 
             auto number_fields = bridge::serialization::unmarshall<size_t>(reader);
-            std::vector<field_v> fields;
-            for (size_t i = 0; i < number_fields; i++) {
-                auto field = bridge::serialization::unmarshall<field_v>(reader);
-                fields.push_back(field);
+            auto fields = bridge::serialization::unmarshall<std::vector<field_v>>(reader);
+
+            if (number_fields != fields.size()) {
+                throw bridge::bridge_error("Number of fields in the document does not match the number of fields in the index.");
             }
 
             return document(std::move(fields));
@@ -147,5 +190,6 @@ namespace bridge::store {
             throw bridge::bridge_error("Unknown error");
         }
     }
+
 
 }

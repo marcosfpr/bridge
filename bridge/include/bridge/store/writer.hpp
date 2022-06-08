@@ -22,86 +22,94 @@
 #define WRITER_HPP_
 
 #include <vector>
+#include <map>
 
 #include "bridge/directory/directory.hpp"
 #include "bridge/schema/field.hpp"
 #include "bridge/store/store.hpp"
 
-namespace bridge::store {
+namespace bridge {
 
-    using namespace bridge::directory;
-    using namespace bridge::schema;
+    namespace compression {
 
-    template <class Device> using WriterPtr = std::unique_ptr<bridge::directory::Writer<Device>>;
+        struct uncompressed_block {
+            std::vector<bridge::byte_t> operator()(bridge::byte_t* data, size_t size) {
+                return { data, data + size };
+            }
+        };
 
-    template <class Device> class store_writer {
-      public:
-        /**
+    }
+
+    namespace store {
+
+        using namespace bridge::directory;
+        using namespace bridge::schema;
+
+        template <class Device> using WriterPtr = std::unique_ptr<bridge::directory::Writer<Device>>;
+
+        template <class Device, class CompressionStrategy = bridge::compression::uncompressed_block> class store_writer {
+          public:
+            /**
          * @brief Construct a new store writer object
          * @param writer The writer to write to the directory.
          * @param compress True if you want to compress the data (You should use this option if you have a lot of data).
-         */
-        explicit store_writer(WriterPtr<Device> writer, bool compress = true)
-            : offsets(), intermediary_buffer(), current_block(), doc_id(), written(), compress(compress) {
-            this->writer = std::move(writer);
-            this->doc_id = 0;
-            this->written = 0;
-        }
+             */
+            explicit store_writer(WriterPtr<Device> writer)
+                : offsets(), intermediary_buffer(), current_block(), doc_id(), written(),
+                  current_block_offsets(), is_closed(false) {
+                this->writer = std::move(writer);
+                this->doc_id = 0;
+                this->written = 0;
+            }
 
-        /**
+            /**
          * @brief Destroy the store writer object
-         */
-        virtual ~store_writer() {
-            this->offsets.clear();
-            this->intermediary_buffer.clear();
-            this->current_block.clear();
-            this->writer->flush(); // should i close?
-        }
+             */
+            virtual ~store_writer() {
+                if (!is_closed) { // RAII
+                    this->close();
+                }
+                this->offsets.clear();
+                this->current_block_offsets.clear();
+                this->intermediary_buffer.clear();
+                this->current_block.clear();
+                this->writer->flush(); // should i close?
+            }
 
-        /**
+            /**
          * @brief Write field_values to store
          * @param fields Vector of references to field_v objects
-         */
-        void store(std::vector<field_v> &fields);
+             */
+            void write(std::vector<field_v> &fields);
 
-        /**
-         * @brief Write field_values to store.
-         */
-        void write();
-
-        /**
+            /**
          * @brief Close the store writer.
-         */
-        void close();
+             */
+            void close();
+
+          protected:
+            /**
+         * @brief Write field_values to store.
+             */
+            void store();
+
+            /**
+         * @brief Write the fields to the current block.
+             */
+            void write_on_current_block(std::vector<field_v> &field_values);
 
 
-      protected:
-
-        /**
-         * @brief Write the field values onto the intermediary buffer.
-         */
-        void write_on_intermediary_buffer(std::vector<field_v> &field_values);
-
-        /**
-         * @brief Write the intermediary buffer to the current block.
-         */
-        void write_on_current_block();
-
-        /**
-         * @brief Compress the current block to the intermediary buffer.
-         */
-        void compress_to_intermediary_buffer();
-
-      private:
-        doc_id_t doc_id;
-        std::vector<offset_index> offsets;
-        uint64_t written;
-        WriterPtr<Device> writer;
-        std::vector<bridge::byte_t> intermediary_buffer;
-        std::vector<bridge::byte_t> current_block;
-        bool compress;
-    };
-
+          private:
+            doc_id_t doc_id;
+            bool is_closed;
+            std::vector<offset_index> offsets;
+            uint64_t written;
+            WriterPtr<Device> writer;
+            std::vector<bridge::byte_t> intermediary_buffer;
+            std::vector<bridge::byte_t> current_block;
+            std::map<doc_id_t, size_t> current_block_offsets;
+        };
+    }
 } // namespace bridge::store
 
 #endif

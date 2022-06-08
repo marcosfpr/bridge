@@ -22,7 +22,7 @@ std::shared_ptr<bridge::schema::Schema> write_lorem_ipsum_store(bridge::store::W
                  " in culpa qui officia deserunt mollit anim id est laborum.";
 
     {
-        bridge::store::store_writer<ArrayDevice> store_writer(std::move(writer), true);
+        bridge::store::store_writer<ArrayDevice> store_writer(std::move(writer));
         for (int i = 0; i < 100; i++) {
             std::vector<field_v> fields;
             {
@@ -34,7 +34,7 @@ std::shared_ptr<bridge::schema::Schema> write_lorem_ipsum_store(bridge::store::W
                 auto field = text_field(field_title, title_text);
                 fields.emplace_back(field);
             }
-            store_writer.store(fields);
+            store_writer.write(fields);
         }
         store_writer.close();
     }
@@ -58,7 +58,6 @@ TEST(StoreTest, TestWriteRead) {
     auto field_title = schema->get_field_id("title");
 
     auto store_source = ram_directory.source(tmp_path);
-    std::cout << "Source with " << store_source->size() << " bytes" << std::endl;
 
     store_reader reader(std::move(store_source));
 

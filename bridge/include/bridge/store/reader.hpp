@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 
 #include "bridge/directory/read_only_source.hpp"
 #include "bridge/schema/document.hpp"
@@ -41,7 +42,7 @@ namespace bridge::store {
          * @param source The source of the store
          */
         explicit store_reader(std::shared_ptr<read_only_source> source)
-            : source_(std::move(source)), current_block_() {
+            : source_(std::move(source)), current_block_(), current_block_offsets(), current_offset() {
             this->read_header();
         }
 
@@ -52,6 +53,7 @@ namespace bridge::store {
             source_.reset();
             offsets_.clear();
             current_block_.clear();
+            current_block_offsets.clear();
         }
 
         /**
@@ -80,10 +82,17 @@ namespace bridge::store {
          */
         void read_block(uint64_t block_offset);
 
+        /**
+         * Read the block offsets of the current block
+         */
+        void read_block_offsets();
+
       private:
         std::shared_ptr<read_only_source> source_;
         std::vector<offset_index> offsets_;
         std::vector<bridge::byte_t> current_block_;
+        std::map<doc_id_t, size_t> current_block_offsets;
+        offset_index current_offset;
     };
 
 
