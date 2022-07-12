@@ -185,7 +185,7 @@ if (BUILD_INSTALLER)
 
         if (NOT BUILD_SHARED_LIBS)
                 install(
-                        FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindFilesystem.cmake
+                        FILES ${BRIDGE_ROOT_DIR}/cmake/FindFileSystem.cmake
                         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bridge
                 )
         endif()

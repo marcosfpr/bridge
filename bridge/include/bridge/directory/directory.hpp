@@ -24,6 +24,7 @@
 #include <filesystem>
 #include <utility>
 #include <vector>
+#include <shared_mutex>
 
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -47,11 +48,12 @@ namespace bridge::directory {
     using FileSource = boost::iostreams::basic_file_source<bridge::byte_t>;
     using ArraySource = boost::iostreams::array_source;
 
-    using ArrayWriter = boost::iostreams::stream<ArrayDevice>;
-    using FileWriter = boost::iostreams::stream<FileDevice>;
+    using ArrayWriter = Writer<ArrayDevice>;
+    using FileWriter = Writer<FileDevice>;
 
-    using FileReader = boost::iostreams::stream<FileSource>;
-    using ArrayReader = boost::iostreams::stream<ArraySource>;
+    using FileReader = Reader<FileSource>;
+    using ArrayReader = Reader<ArraySource>;
+
 
     /**
      * @brief Write-once many read (WORM) abstraction for where bridge's index should be stored.
@@ -81,33 +83,114 @@ namespace bridge::directory {
          * Specifically, subsequent write or flush should have  no effect in the object.
          * @return read_only_source Read only source.
          */
-        [[nodiscard]] virtual std::shared_ptr<read_only_source> source(const Path& path) const = 0;
+        [[nodiscard]] std::shared_ptr<read_only_source> source(const Path& path)  {
+            if(!mutex_.try_lock_shared())
+                throw open_directory_error(directory_already_locked);
+            is_open_read = true;
+            return _source(path);
+        }
 
         /**
          * @brief Removes a file
          * @details Removing a file will not affect eventual existing read_only_source pointing to it.
          */
-        virtual void remove(const Path& path) = 0;
+        void remove(const Path& path){
+            if(!mutex_.try_lock())
+                throw open_directory_error(directory_already_locked);
+            _remove(path);
+            mutex_.unlock();
+        }
 
         /**
-         * @brief Opens a virtual file for write.
+         * @brief Open the directory for write.
          * @return Writer stream.
          */
-        [[nodiscard]] virtual std::unique_ptr<Writer<Device>> open_write(const Path& path) = 0;
+        [[nodiscard]] std::unique_ptr<Writer<Device>> open_write(const Path& path) {
+            if(!mutex_.try_lock())
+                throw open_directory_error(directory_already_locked);
+            is_open_write = true;
+            return _open_write(path);
+        }
 
 
         /**
-         * @brief Opens a virtual file for write.
-         * @return Writer stream.
+         * @brief Open the directory for read.
+         * @return Reader stream.
          */
-        [[nodiscard]] virtual std::shared_ptr<Reader<Source>> open_read(const Path& path) = 0;
+        [[nodiscard]] std::shared_ptr<Reader<Source>> open_read(const Path& path) {
+            if(!mutex_.try_lock_shared())
+                throw open_directory_error(directory_already_locked);
+            is_open_read = true;
+            return _open_read(path);
+        }
 
         /**
          * @brief Atomically replace the content  of a file by data.
          * This calls ensure that reads can never 'observe' a partially written file.
          * The file may or may not previously exist.
          */
-        virtual void replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) = 0;
+        void replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) {
+            if(!mutex_.try_lock())
+                throw open_directory_error(directory_already_locked);
+            _replace_content(path, data, length);
+            mutex_.unlock();
+        }
+
+        /**
+         * @brief Close the directory if its open.
+         * @return Bool if the directory was closed successfully
+         */
+        bool close() {
+            if (is_open_write) {
+                is_open_write = false;
+                mutex_.unlock();
+                return true;
+            }
+            else if (is_open_read) {
+                is_open_read = false;
+                mutex_.unlock_shared();
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * @brief Opens a virtual file for read.
+         * @details Once  a file is opened, its data may not be modified.
+         * Specifically, subsequent write or flush should have  no effect in the object.
+         * @return read_only_source Read only source.
+         */
+        [[nodiscard]] virtual std::shared_ptr<read_only_source> _source(const Path& path) = 0;
+
+        /**
+         * @brief Removes a file
+         * @details Removing a file will not affect eventual existing read_only_source pointing to it.
+         */
+        virtual void _remove(const Path& path) = 0;
+
+        /**
+         * @brief Open the directory for write.
+         * @return Writer stream.
+         */
+        [[nodiscard]] virtual std::unique_ptr<Writer<Device>> _open_write(const Path& path) = 0;
+
+
+        /**
+         * @brief Open the directory for read.
+         * @return Reader stream.
+         */
+        [[nodiscard]] virtual std::shared_ptr<Reader<Source>> _open_read(const Path& path) = 0;
+
+        /**
+         * @brief Atomically replace the content  of a file by data.
+         * This calls ensure that reads can never 'observe' a partially written file.
+         * The file may or may not previously exist.
+         */
+        virtual void _replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) = 0;
+
+      private:
+        bool is_open_read{}, is_open_write{};
+        mutable std::shared_mutex mutex_;
     };
 
 } // namespace bridge::directory

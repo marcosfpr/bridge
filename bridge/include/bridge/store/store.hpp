@@ -109,7 +109,6 @@ namespace bridge::store {
         template <class Archive> void serialize(Archive &ar) {
             ar( doc_id, offset );
         }
-        friend class cereal::access;
 
       private:
         bridge::doc_id_t doc_id;

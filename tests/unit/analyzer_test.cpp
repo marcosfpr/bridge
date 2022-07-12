@@ -10,7 +10,6 @@ TEST(TestAnalyzer, Tokenize) {
 
   auto tokenizer = bridge::analyzer::alphanumeric_tokenizer("hello happy tax player");
 
-  
   for (auto token : tokenizer) {
     auto it = std::find(tokens.begin(), tokens.end(), token);
     EXPECT_NE(it, tokens.end());

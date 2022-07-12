@@ -58,7 +58,6 @@ namespace bridge::directory {
                 std::filesystem::create_directory(temp_dir);
             }
             this->root_ = temp_dir;
-            this->temp_file_ = std::make_shared<Path>(temp_dir);
         }
 
         /**
@@ -66,14 +65,23 @@ namespace bridge::directory {
          */
         explicit MMapDirectory(const Path &root) {
             this->root_ = root;
-            this->temp_file_ = std::nullopt;
+        }
+
+        /**
+         * @brief Virtual destructor for Directory.
+         */
+        ~MMapDirectory() override {
+            mmap_cache_.clear();
+            if(std::filesystem::exists(root_)) {
+                std::filesystem::remove(root_);
+            }
         }
 
         /**
          * @brief Open a MMapDirectory from a path
          *
          * @return Returns an error if the directory_path does not exist or if it is not a directory.
-*/
+        */
         static std::unique_ptr<MMapDirectory> open(const Path &directory_path) {
             if (!std::filesystem::exists(directory_path)) {
                 throw open_directory_error(open_directory_error_type::directory_not_found);
@@ -82,13 +90,6 @@ namespace bridge::directory {
                 throw open_directory_error(open_directory_error_type::not_a_directory);
             }
             return std::make_unique<MMapDirectory>(directory_path);
-        }
-
-        /**
-         * @brief Virtual destructor for Directory.
-         */
-        ~MMapDirectory() override {
-            mmap_cache_.clear();
         }
 
         /**
@@ -122,11 +123,9 @@ namespace bridge::directory {
          * Specifically, subsequent write or flush should have  no effect in the object.
          * @return read_only_source Read only source.
          */
-        [[nodiscard]] std::shared_ptr<read_only_source> source(const Path& path) const override {
-            Path full_path = join(path);
+        [[nodiscard]] std::shared_ptr<read_only_source> _source(const Path& path) override {
 
-            // Lock multiple readers
-            std::shared_lock lock(mutex_);
+            Path full_path = join(path);
 
             if (!std::filesystem::exists(full_path) || std::filesystem::is_directory(full_path)) {
                 throw file_error("File does not exist or is a directory: " + full_path.string());
@@ -153,11 +152,8 @@ namespace bridge::directory {
          * @brief Removes a file
          * @details Removing a file will not affect eventual existing read_only_source pointing to it.
          */
-        void remove(const Path& path) override {
+        void _remove(const Path& path) override {
             Path full_path = join(path);
-
-            // Lock single writer
-            std::unique_lock lock(mutex_);
 
             // Remove the entry in the mmap cache.
             mmap_cache_.erase(full_path);
@@ -175,11 +171,8 @@ namespace bridge::directory {
          * Specifically, subsequent write or flush should have  no effect in the object.
          * @return Writer.
          */
-        [[nodiscard]] std::unique_ptr<FileWriter> open_write(const Path& path) override {
+        [[nodiscard]] std::unique_ptr<FileWriter> _open_write(const Path& path) override {
             Path full_path = join(path);
-
-            // Lock single writer
-            std::unique_lock lock(mutex_);
 
             //  Check if file is valid and open for write
             if (std::filesystem::exists(full_path)) {
@@ -200,11 +193,8 @@ namespace bridge::directory {
          * @details Once a file is opened, its data may not be modified.
          * @return Reader.
          */
-        [[nodiscard]] std::shared_ptr<FileReader> open_read(const Path& path) override {
+        [[nodiscard]] std::shared_ptr<FileReader> _open_read(const Path& path) override {
             Path full_path = join(path);
-
-            // Lock single writer
-            std::unique_lock lock(mutex_);
 
             //  Check if file is valid and open for write
             if (! std::filesystem::exists(full_path)) {
@@ -223,11 +213,8 @@ namespace bridge::directory {
          * This calls ensure that reads can never 'observe' a partially written file.
          * The file may or may not previously exist.
          */
-        void replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) override {
+        void _replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) override {
             Path full_path = join(path);
-
-            // Lock single writer
-            std::unique_lock lock(mutex_);
 
             if (std::filesystem::is_directory(full_path)) {
                 throw file_error("Cannot replace a directory");
@@ -245,9 +232,7 @@ namespace bridge::directory {
 
       private:
         Path root_;
-        std::optional<std::shared_ptr<Path>> temp_file_;
         mutable mmap_cache_t mmap_cache_;
-        mutable std::shared_mutex mutex_;
     };
 } // namespace bridge::directory
 #endif

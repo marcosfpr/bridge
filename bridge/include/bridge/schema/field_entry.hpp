@@ -35,7 +35,6 @@ namespace bridge::schema {
      * Currently, a field type can be one of the following:
      * 1. text field
      * 2. numeric field
-     * todo: I don't know if this is the best way to do this, but I'm not sure.
      */
 
     // Concept of a field type: a field type is a string  type or numeric type

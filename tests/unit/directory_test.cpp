@@ -1,7 +1,5 @@
 #include "bridge/bridge.hpp"
 
-#include <iostream>
-#include <string>
 #include <vector>
 #include <filesystem>
 
@@ -23,6 +21,8 @@ TEST(TestDirectory, TestRamDirectory) {
         // write file
         auto write_file = ram_dir.open_write(temp_file);
 
+//        auto anoter_writer =ram_dir.open_write(temp_file); not allowed
+
         write_file->write(byte, 5);
 
 //        for (auto& value : float_vec) {
@@ -31,9 +31,12 @@ TEST(TestDirectory, TestRamDirectory) {
 
         write_file->flush();
 
+        ram_dir.close();
     }
     // read file
     auto read_file = ram_dir.source(temp_file);
+
+    // auto reader = ram_dir.open_read(temp_file);  // allowed.
 
     const bridge::byte_t* data_read = read_file->deref();
     auto length = read_file->size();
@@ -43,4 +46,6 @@ TEST(TestDirectory, TestRamDirectory) {
     for (int i = 0; i < length; i++) {
         ASSERT_EQ((char)data_read[i], byte[i]);
     }
+
+    ram_dir.close();
 }

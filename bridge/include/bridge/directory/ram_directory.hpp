@@ -61,11 +61,7 @@ namespace bridge::directory {
          * Specifically, subsequent write or flush should have  no effect in the object.
          * @return read_only_source Read only source.
          */
-        [[nodiscard]] std::shared_ptr<read_only_source> source(const Path& path) const override {
-
-            // Lock that allows to read the cache
-            // todo: useless i think
-            std::shared_lock lock(mutex_);
+        [[nodiscard]] std::shared_ptr<read_only_source> _source(const Path& path) override {
 
             // Check if the file is in the cache
             auto it = ram_cache_.find(path);
@@ -79,9 +75,7 @@ namespace bridge::directory {
          * @brief Removes a file
          * @details Removing a file will not affect eventual existing read_only_source pointing to it.
          */
-        void remove(const Path& path) override {
-            std::unique_lock lock(mutex_);
-
+        void _remove(const Path& path) override {
             // Check if the file is in the cache
             auto it = ram_cache_.find(path);
             if (it == ram_cache_.end()) {
@@ -98,8 +92,7 @@ namespace bridge::directory {
          * Specifically, subsequent write or flush should have  no effect in the object.
          * @return Writer.
          */
-        [[nodiscard]] std::unique_ptr<ArrayWriter> open_write(const Path& path) override {
-            // std::unique_lock lock(mutex_);
+        [[nodiscard]] std::unique_ptr<ArrayWriter> _open_write(const Path& path) override {
 
             // Check if the file is in the cache
             auto it = ram_cache_.find(path);
@@ -121,8 +114,7 @@ namespace bridge::directory {
          * @brief Opens a virtual file for read.
          * @return Reader.
          */
-        [[nodiscard]] std::shared_ptr<ArrayReader> open_read(const Path& path) override {
-            // std::unique_lock lock(mutex_);
+        [[nodiscard]] std::shared_ptr<ArrayReader> _open_read(const Path& path) override {
 
             // Check if the file is in the cache
             auto it = ram_cache_.find(path);
@@ -143,10 +135,7 @@ namespace bridge::directory {
          * This calls ensure that reads can never 'observe' a partially written file.
          * The file may or may not previously exist.
          */
-        void replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) override {
-            // Lock single writer
-            std::unique_lock lock(mutex_);
-
+        void _replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) override {
             // Check if the file is in the cache
             auto it = ram_cache_.find(path);
             if(it != ram_cache_.end()) {
@@ -160,7 +149,6 @@ namespace bridge::directory {
 
       private:
         mutable ram_cache_t ram_cache_;
-        mutable std::shared_mutex mutex_;
     };
 
 } // namespace bridge::directory

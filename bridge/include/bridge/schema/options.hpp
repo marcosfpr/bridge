@@ -208,7 +208,6 @@ namespace bridge::schema {
         [[maybe_unused]] void serialize(Archive &ar) {
             ar(_index_options);
         }
-        friend class cereal::access;
 
       private:
         /**

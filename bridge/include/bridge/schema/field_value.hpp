@@ -34,10 +34,6 @@ namespace bridge::schema {
     /// @brief  Concept of a field value: a field value is a string or numeric value and must be serializable.
     template <typename T>
     concept FieldValue = (std::is_same_v<T, std::string> || std::unsigned_integral<T>) && serialization::Serializable<T>;
-
-    /// @brief TODO: Alternative: using std::any to store the value.
-    /// @brief Default values for this 1st version of bridge are string and uint32_t.
-    using value_type = std::variant<std::string, uint32_t>;
     
     /**
      * @brief Value represents the value of a any field. It is generic over all of the possible field types.
@@ -121,7 +117,6 @@ namespace bridge::schema {
         template <class Archive> void serialize(Archive &ar) {
             ar(_value);
         }
-        friend class cereal::access;
 
       private:
         V _value;

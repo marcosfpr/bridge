@@ -57,6 +57,8 @@ TEST(StoreTest, TestWriteRead) {
 
     auto field_title = schema->get_field_id("title");
 
+    ram_directory.close();
+
     auto store_source = ram_directory.source(tmp_path);
 
     store_reader reader(std::move(store_source));
@@ -74,6 +76,8 @@ TEST(StoreTest, TestWriteRead) {
             ASSERT_TRUE(false);
         }
     }
+
+    ram_directory.close();
 
 }
 
@@ -98,12 +102,14 @@ TEST(SerializeTest,  WithDirectory) {
         auto length =  bridge::serialization::marshall(*writer, data);
         ASSERT_TRUE(length > 0);
         writer->flush();
+        ram.close();
     }
     {
         auto reader = ram.open_read(tmp_path);
         auto deserialized = bridge::serialization::unmarshall<std::string>(*reader);
         ASSERT_EQ(deserialized.size(), data.size());
         reader->close();
+        ram.close();
     }
 
 }

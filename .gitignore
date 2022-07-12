@@ -36,3 +36,6 @@ bin
 *.exe
 *.out
 *.app
+
+# Environments
+.venv

@@ -24,8 +24,7 @@
 #include "cereal/cereal.hpp"
 #include <sstream>
 
-namespace bridge {
-    namespace archive {
+namespace bridge::archive {
         /**
          * @brief Custom bridge serialization error.
          *
@@ -53,11 +52,11 @@ namespace bridge {
             //! Construct, outputting to the provided stream
             /*! @param stream The stream to output to.  Can be a stringstream, a file stream, or
                               even cout! */
-            BinaryOutput(std::ostream &stream)
+            explicit BinaryOutput(std::ostream &stream)
                 : cereal::OutputArchive<BinaryOutput, cereal::AllowEmptyClassElision>(this), itsStream(stream),
                   total_written(0) {}
 
-            ~BinaryOutput() CEREAL_NOEXCEPT = default;
+            ~BinaryOutput() CEREAL_NOEXCEPT override = default;
 
             //! Writes size bytes of data to the output stream
             void saveBinary(const void *data, std::streamsize size) {
@@ -94,10 +93,10 @@ namespace bridge {
         class BinaryInput : public cereal::InputArchive<BinaryInput, cereal::AllowEmptyClassElision> {
           public:
             //! Construct, loading from the provided stream
-            BinaryInput(std::istream &stream)
+            explicit BinaryInput(std::istream &stream)
                 : InputArchive<BinaryInput, cereal::AllowEmptyClassElision>(this), itsStream(stream) {}
 
-            ~BinaryInput() CEREAL_NOEXCEPT = default;
+            ~BinaryInput() CEREAL_NOEXCEPT override = default;
 
             //! Reads size bytes of data from the input stream
             void loadBinary(void *const data, std::streamsize size) {
@@ -152,8 +151,7 @@ namespace bridge {
         template <class T> inline void CEREAL_LOAD_FUNCTION_NAME(BinaryInput &ar, cereal::BinaryData<T> &bd) {
             ar.loadBinary(bd.data, static_cast<std::streamsize>(bd.size));
         }
-    } // namespace archive
-} // namespace bridge
+    } // namespace bridge
 
 // register archives for polymorphic support
 CEREAL_REGISTER_ARCHIVE(bridge::archive::BinaryOutput)

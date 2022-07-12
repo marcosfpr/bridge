@@ -27,12 +27,12 @@
 #include <iterator>
 #include <regex>
 #include <string>
+#include <utility>
 
 namespace bridge {
 
     namespace analyzer {
 
-        // TODO: Add Tokenizer to a different file.
         /**
          * @brief Tokenizer concept.
          *  This is a concept that defines a tokenizer.
@@ -57,7 +57,7 @@ namespace bridge {
             using iterator_category = typename T::iterator_category;
 
             regex_tokenizer(std::string text, std::regex pattern, int type)
-                : text_(text), pattern_(pattern), type_(type) {}
+                : text_(std::move(text)), pattern_(std::move(pattern)), type_(type) {}
 
             iterator begin() {
                 // getting args template as values
@@ -80,13 +80,13 @@ namespace bridge {
          * @brief Alphanumeric regex tokenizer
          *
          */
-        static std::regex alphanumeric = std::regex("[a-zA-Z0-9]+");
+        static std::regex alphanumeric  = std::regex("[a-zA-Z0-9]+"); // NOLINT(cert-err58-cpp)
 
         class alphanumeric_tokenizer
             : public regex_tokenizer<regex_token_iterator> {
             public:
-                alphanumeric_tokenizer(std::string text)
-                    : regex_tokenizer(text, alphanumeric, 0) {}
+                explicit alphanumeric_tokenizer(std::string text)
+                    : regex_tokenizer(std::move(text), alphanumeric, 0) {}
         };
 
     }; // namespace analyzer

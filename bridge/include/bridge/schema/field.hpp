@@ -138,7 +138,6 @@ namespace bridge::schema {
          * @param version Current version of the field.
          */
         template <class Archive> void serialize(Archive &ar) { ar(id, value); }
-        friend class cereal::access;
 
         /**
          * @brief Hash the field.
@@ -159,7 +158,6 @@ namespace bridge::schema {
     /**
      * @brief In the Bridge project, documents are represented as a collection of fields.
      * @details For this first version, we will only support a two variants of field types: string and integer.
-     * @todo It must change in the future lol.
      */
     typedef std::variant<text_field, uint32_field> field_v;
 

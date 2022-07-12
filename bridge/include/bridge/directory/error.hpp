@@ -47,6 +47,7 @@ namespace bridge::directory {
     enum open_directory_error_type {
         directory_not_found,
         not_a_directory,
+        directory_already_locked
     };
 
     struct open_directory_error : public io_error {
@@ -58,6 +59,8 @@ namespace bridge::directory {
                     return "Directory not found";
                 case not_a_directory:
                     return "Not a directory";
+                case directory_already_locked:
+                    return "Directory already locked";
                 default:
                     return "Unknown error";
             }
