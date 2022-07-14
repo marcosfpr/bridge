@@ -35,6 +35,26 @@
 #include "bridge/directory/error.hpp"
 #include "bridge/directory/read_only_source.hpp"
 
+#define LOCK(mutex, is_safe_lock) \
+    if constexpr (is_safe_lock) { \
+        if (!mutex.try_lock()) \
+            throw open_directory_error(directory_already_locked); \
+    } \
+    else { mutex.lock(); }        \
+
+#define SHARED_LOCK(mutex, is_safe_lock) \
+    if constexpr (is_safe_lock) { \
+        if (!mutex.try_lock_shared()) \
+            throw open_directory_error(directory_already_locked); \
+    } \
+    else { mutex.lock_shared(); } \
+
+#define UNLOCK(mutex) \
+    mutex.unlock();   \
+
+#define UNLOCK_SHARED(mutex) \
+    mutex.unlock_shared();   \
+
 namespace bridge::directory {
 
     using Path = std::filesystem::path;
@@ -62,7 +82,7 @@ namespace bridge::directory {
      * 1. The MMapDirectory, which uses mmap() to map the index into memory.
      * 2. The RAMDirectory, which is a test functionality that stores the index in RAM.
      */
-     template<typename Device, typename Source>
+     template<typename Device, typename Source, bool is_safe_lock = true>
     class Directory {
       public:
         /**
@@ -71,7 +91,7 @@ namespace bridge::directory {
         virtual ~Directory() = default;
 
         /**
-         * @brief Operator << for Debbuging purposes.
+         * @brief Operator << is needed for logging purposes.
          */
         friend std::ostream &operator<<(std::ostream &os, const Directory &dir) {
             throw std::runtime_error("No implementation for operator<< for Directory was found.");
@@ -84,8 +104,7 @@ namespace bridge::directory {
          * @return read_only_source Read only source.
          */
         [[nodiscard]] std::shared_ptr<read_only_source> source(const Path& path)  {
-            if(!mutex_.try_lock_shared())
-                throw open_directory_error(directory_already_locked);
+            SHARED_LOCK(mutex_, is_safe_lock)
             is_open_read = true;
             return _source(path);
         }
@@ -95,10 +114,9 @@ namespace bridge::directory {
          * @details Removing a file will not affect eventual existing read_only_source pointing to it.
          */
         void remove(const Path& path){
-            if(!mutex_.try_lock())
-                throw open_directory_error(directory_already_locked);
+            LOCK(mutex_, is_safe_lock)
             _remove(path);
-            mutex_.unlock();
+            UNLOCK(mutex_)
         }
 
         /**
@@ -106,8 +124,7 @@ namespace bridge::directory {
          * @return Writer stream.
          */
         [[nodiscard]] std::unique_ptr<Writer<Device>> open_write(const Path& path) {
-            if(!mutex_.try_lock())
-                throw open_directory_error(directory_already_locked);
+            LOCK(mutex_, is_safe_lock)
             is_open_write = true;
             return _open_write(path);
         }
@@ -118,8 +135,7 @@ namespace bridge::directory {
          * @return Reader stream.
          */
         [[nodiscard]] std::shared_ptr<Reader<Source>> open_read(const Path& path) {
-            if(!mutex_.try_lock_shared())
-                throw open_directory_error(directory_already_locked);
+            SHARED_LOCK(mutex_, is_safe_lock)
             is_open_read = true;
             return _open_read(path);
         }
@@ -130,28 +146,24 @@ namespace bridge::directory {
          * The file may or may not previously exist.
          */
         void replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) {
-            if(!mutex_.try_lock())
-                throw open_directory_error(directory_already_locked);
+            LOCK(mutex_, is_safe_lock)
             _replace_content(path, data, length);
-            mutex_.unlock();
+            UNLOCK(mutex_)
         }
 
         /**
          * @brief Close the directory if its open.
-         * @return Bool if the directory was closed successfully
+         * @return True if the directory was closed successfully and false otherwise.
          */
-        bool close() {
+        void close() {
             if (is_open_write) {
                 is_open_write = false;
-                mutex_.unlock();
-                return true;
+                UNLOCK(mutex_)
             }
             else if (is_open_read) {
                 is_open_read = false;
-                mutex_.unlock_shared();
-                return true;
+                UNLOCK_SHARED(mutex_)
             }
-            return false;
         }
 
         /**
@@ -187,7 +199,6 @@ namespace bridge::directory {
          * The file may or may not previously exist.
          */
         virtual void _replace_content(const Path &path, const bridge::byte_t *data, std::streamsize length) = 0;
-
       private:
         bool is_open_read{}, is_open_write{};
         mutable std::shared_mutex mutex_;

@@ -32,7 +32,9 @@ namespace bridge::directory {
     /// @brief A cache directory that stores data in RAM.
     typedef std::map<Path, std::vector<bridge::byte_t>> ram_cache_t;
 
-    class RAMDirectory : public Directory<ArrayDevice, ArraySource> {
+    /// @brief A RAM directory.
+    template <bool is_safe_lock = false>
+    class RAMDirectory : public Directory<ArrayDevice, ArraySource, is_safe_lock> {
       public:
 
         /**

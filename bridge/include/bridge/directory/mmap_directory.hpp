@@ -46,7 +46,8 @@ namespace bridge::directory {
      *  @brief Directory storing data in files, read via mmap.
      *  The mmap object are cached to limit  the system calls.
      */
-    class MMapDirectory : public Directory<FileDevice, FileSource> {
+     template<bool is_safe_lock = false>
+    class MMapDirectory : public Directory<FileDevice, FileSource, is_safe_lock> {
       public:
 
         /**
